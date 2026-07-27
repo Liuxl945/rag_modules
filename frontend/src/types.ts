@@ -105,3 +105,10 @@ export interface KnowledgeGraph {
   edges: KnowledgeEdge[]
   counts: { primary: number; total: number }
 }
+
+/** 菜谱名称与分类（下拉选择用） */
+export interface RecipeName {
+  id: string
+  name: string
+  category: string
+}

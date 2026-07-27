@@ -5,19 +5,12 @@ import { getStats, rebuildKnowledgeBase } from '@/api'
 import type { SystemStats } from '@/types'
 import KnowledgeGraphDialog from '@/components/KnowledgeGraphDialog.vue'
 
-type GraphType = 'recipes' | 'ingredients' | 'cooking_steps'
-
 const stats = ref<SystemStats | null>(null)
 const loading = ref(false)
 const rebuilding = ref(false)
 
-// 知识图谱弹窗
+// 菜谱知识图谱弹窗
 const graphVisible = ref(false)
-const graphType = ref<GraphType | null>(null)
-function openGraph(t: GraphType) {
-  graphType.value = t
-  graphVisible.value = true
-}
 
 async function refresh() {
   loading.value = true
@@ -57,13 +50,13 @@ async function rebuild() {
   }
 }
 
-// 知识库计数卡片（前三个可点击查看知识图谱）
+// 知识库计数卡片（仅菜谱可点击查看知识图谱）
 const kbCounts = computed(() => {
   const kb = stats.value?.knowledge_base || {}
   return [
-    { label: '菜谱', value: (kb.total_recipes as number) ?? 0, graphType: 'recipes' as GraphType },
-    { label: '食材', value: (kb.total_ingredients as number) ?? 0, graphType: 'ingredients' as GraphType },
-    { label: '烹饪步骤', value: (kb.total_cooking_steps as number) ?? 0, graphType: 'cooking_steps' as GraphType },
+    { label: '菜谱', value: (kb.total_recipes as number) ?? 0, isClickable: true },
+    { label: '食材', value: (kb.total_ingredients as number) ?? 0 },
+    { label: '烹饪步骤', value: (kb.total_cooking_steps as number) ?? 0 },
     { label: '文档', value: (kb.total_documents as number) ?? 0 },
     { label: '文本块', value: (kb.total_chunks as number) ?? 0 },
   ]
@@ -112,11 +105,11 @@ onMounted(refresh)
         <el-col v-for="item in kbCounts" :key="item.label" :span="4">
           <div
             class="stat-card"
-            :class="{ clickable: item.graphType }"
-            @click="item.graphType && openGraph(item.graphType)"
+            :class="{ clickable: item.isClickable }"
+            @click="item.isClickable && (graphVisible = true)"
           >
             <el-statistic :title="item.label" :value="item.value" />
-            <div v-if="item.graphType" class="card-hint">🔗 查看知识图谱</div>
+            <div v-if="item.isClickable" class="card-hint">🔗 查看知识图谱</div>
           </div>
         </el-col>
       </el-row>
@@ -143,8 +136,8 @@ onMounted(refresh)
       <el-empty v-else description="暂无查询记录" :image-size="80" />
     </el-card>
 
-    <!-- 知识图谱弹窗 -->
-    <KnowledgeGraphDialog v-model="graphVisible" :type="graphType" />
+    <!-- 菜谱知识图谱弹窗 -->
+    <KnowledgeGraphDialog v-model="graphVisible" />
   </div>
 </template>
 

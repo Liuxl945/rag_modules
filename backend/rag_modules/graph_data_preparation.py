@@ -826,6 +826,72 @@ class GraphDataPreparationModule:
             "counts": {"primary": len(primary_ids), "total": len(nodes)},
         }
 
+    # ========== 菜谱列表 & 单菜谱全量子图（供前端单菜谱图谱使用） ==========
+
+    def get_all_recipe_names(self) -> List[Dict[str, Any]]:
+        """返回所有菜谱的 id/name/category 列表（来自内存列表，免查库）。"""
+        return [
+            {"id": r.node_id, "name": r.name, "category": r.properties.get("category", "")}
+            for r in self.recipes
+        ]
+
+    def get_single_recipe_graph(self, recipe_id: str) -> Dict[str, Any]:
+        """返回指定菜谱的完整 1-hop 子图（所有 Ingredient / CookingStep / Category，无限制）。
+
+        Args:
+            recipe_id: Recipe 节点的 nodeId（如 "201000001"）
+
+        Returns:
+            {"nodes": [...], "edges": [...], "counts": {"primary": 1, "total": N}}
+
+        Raises:
+            ValueError: recipe_id 不存在
+        """
+        recipe_node = None
+        for r in self.recipes:
+            if r.node_id == recipe_id:
+                recipe_node = r
+                break
+        if recipe_node is None:
+            raise ValueError(f"未找到菜谱: {recipe_id}")
+
+        nodes: Dict[str, Dict[str, Any]] = {}
+        edges: List[Dict[str, Any]] = []
+
+        # Recipe 主节点（元数据来自内存）
+        label = self._primary_label(recipe_node.labels)
+        nodes[recipe_node.node_id] = {
+            "id": recipe_node.node_id,
+            "label": recipe_node.name or recipe_node.node_id,
+            "type": label,
+            "properties": self._summarize_properties(label, recipe_node.properties),
+        }
+
+        # 邻居 + 关系（查 Neo4j，无封顶）
+        with self.driver.session() as session:
+            query = """
+            MATCH (r:Recipe {nodeId: $rid})-[rel]->(n)
+            WHERE n:Ingredient OR n:CookingStep OR n:Category
+            RETURN type(rel) AS rel_type,
+                   COALESCE(n.nodeId, 'cat:' + n.name) AS nid,
+                   labels(n) AS nlabels, n.name AS nname,
+                   properties(n) AS nprops
+            ORDER BY rel_type, nname
+            """
+            for rec in session.run(query, {"rid": recipe_id}):
+                self._add_neighbor(
+                    nodes, edges,
+                    neighbor_id=rec["nid"], neighbor_labels=rec["nlabels"],
+                    neighbor_name=rec["nname"], neighbor_props=rec["nprops"],
+                    from_id=recipe_id, to_id=rec["nid"], rel_type=rec["rel_type"],
+                )
+
+        return {
+            "nodes": list(nodes.values()),
+            "edges": edges,
+            "counts": {"primary": 1, "total": len(nodes)},
+        }
+
     def __del__(self):
         """析构函数：确保关闭数据库连接（防止资源泄漏）。"""
         self.close()

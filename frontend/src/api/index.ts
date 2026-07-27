@@ -8,6 +8,7 @@ import type {
   Conversation,
   ChatMessage,
   KnowledgeGraph,
+  RecipeName,
 } from '@/types'
 
 const http = axios.create({
@@ -27,15 +28,17 @@ export async function getStats(): Promise<SystemStats> {
   return data
 }
 
-/** 获取某类节点的有界知识子图（可视化用） */
-export async function getKnowledgeGraph(
-  type: 'recipes' | 'ingredients' | 'cooking_steps',
-  limit: number = 10,
-  neighborLimit: number = 4,
-): Promise<KnowledgeGraph> {
-  const { data } = await http.get<KnowledgeGraph>('/knowledge-graph', {
-    params: { type, limit, neighbor_limit: neighborLimit },
-  })
+/** 获取所有菜谱的 id/name/category 列表（下拉选择用） */
+export async function listRecipeNames(): Promise<RecipeName[]> {
+  const { data } = await http.get<{ recipes: RecipeName[] }>('/recipes')
+  return data.recipes
+}
+
+/** 获取指定菜谱的完整 1-hop 子图（所有食材/步骤/分类，无限制） */
+export async function getRecipeGraph(recipeId: string): Promise<KnowledgeGraph> {
+  const { data } = await http.get<KnowledgeGraph>(
+    `/knowledge-graph/recipe/${encodeURIComponent(recipeId)}`,
+  )
   return data
 }
 

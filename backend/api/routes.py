@@ -83,24 +83,23 @@ async def stats():
 
 
 # ---------------------------------------------------------------------------
-# 知识图谱子图（可视化用）
+# 菜谱列表 & 单菜谱知识图谱
 # ---------------------------------------------------------------------------
-@router.get("/knowledge-graph")
-async def knowledge_graph(type: str, limit: int = 15, neighbor_limit: int = 6):
-    """返回某类节点（recipes/ingredients/cooking_steps）的有界知识子图。
+@router.get("/recipes")
+async def list_recipes():
+    """返回所有菜谱的 id/name/category 列表（来自内存列表，免查库）。"""
+    system = _require_system()
+    return {"recipes": system.get_all_recipe_names()}
 
-    Query 参数：
-        type: recipes | ingredients | cooking_steps
-        limit: 主节点数量上限（1-50，默认 15）
-        neighbor_limit: 每主节点邻居数量上限（1-12，默认 6）
-    """
+
+@router.get("/knowledge-graph/recipe/{recipe_id}")
+async def recipe_graph(recipe_id: str):
+    """返回指定菜谱的完整 1-hop 子图（所有 Ingredient/CookingStep/Category，无限制）。"""
     system = _require_system()
     try:
-        return await asyncio.to_thread(
-            system.get_knowledge_subgraph, type, limit, neighbor_limit
-        )
+        return await asyncio.to_thread(system.get_single_recipe_graph, recipe_id)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e))
 
 
 # ---------------------------------------------------------------------------

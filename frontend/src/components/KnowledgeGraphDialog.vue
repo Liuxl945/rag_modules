@@ -1,18 +1,26 @@
 <script setup lang="ts">
-import { ref, computed, watch, onUnmounted, nextTick } from 'vue'
-import { getKnowledgeGraph } from '@/api'
-import type { KnowledgeGraph, KnowledgeNode } from '@/types'
+import { ref, onUnmounted } from 'vue'
+import { ElMessage } from 'element-plus'
+import { listRecipeNames, getRecipeGraph } from '@/api'
+import type { KnowledgeGraph, KnowledgeNode, RecipeName } from '@/types'
 
-type GraphType = 'recipes' | 'ingredients' | 'cooking_steps'
-
-const props = defineProps<{ type: GraphType | null }>()
 const visible = defineModel<boolean>({ required: true })
 
-const TYPE_TITLES: Record<GraphType, string> = {
-  recipes: '菜谱',
-  ingredients: '食材',
-  cooking_steps: '烹饪步骤',
-}
+const title = '菜谱知识图谱'
+
+// 菜谱下拉
+const recipeOptions = ref<RecipeName[]>([])
+const selectedRid = ref<string | null>(null)
+const loadingOptions = ref(false)
+
+// 图谱状态
+const containerRef = ref<HTMLDivElement | null>(null)
+const loadingGraph = ref(false)
+const error = ref('')
+const graph = ref<KnowledgeGraph | null>(null)
+
+let network: any = null
+
 const PROP_LABELS: Record<string, string> = {
   category: '分类',
   cuisineType: '菜系',
@@ -31,76 +39,59 @@ const legend = [
   { label: '分类', color: '#909399' },
 ]
 
-const title = computed(() => (props.type ? `${TYPE_TITLES[props.type]}知识图谱` : '知识图谱'))
-
-const containerRef = ref<HTMLDivElement | null>(null)
-const loading = ref(false)
-const error = ref('')
-const graph = ref<KnowledgeGraph | null>(null)
-// vis-network 实例（非响应式，无需触发视图更新）
-let network: any = null
-
-// vis-network 选项（类型极其严格且冗长，用 any 规避繁琐的类型断言；运行时按文档配置）
+// vis-network 选项
 const OPTIONS: any = {
-  nodes: { shape: 'dot', size: 16, borderWidth: 2, font: { size: 13, face: 'sans-serif' } },
+  nodes: { shape: 'dot', size: 18, borderWidth: 2, font: { size: 13, face: 'sans-serif' } },
   edges: {
     arrows: { to: { enabled: true, scaleFactor: 0.5 } },
     color: { color: '#c0c4cc', highlight: '#409eff', opacity: 0.7 },
     smooth: { type: 'continuous' },
   },
   groups: {
-    Recipe: { color: { background: '#409eff', border: '#337ecc' } },
+    Recipe: { color: { background: '#409eff', border: '#337ecc' }, shape: 'star', size: 28 },
     Ingredient: { color: { background: '#67c23a', border: '#529b2e' } },
     CookingStep: { color: { background: '#e6a23c', border: '#b88230' } },
     Category: { color: { background: '#909399', border: '#72767b' }, shape: 'box' },
   },
   physics: {
     stabilization: { iterations: 200 },
-    barnesHut: { gravitationalConstant: -8000, springLength: 120, springConstant: 0.04 },
+    barnesHut: { gravitationalConstant: -8000, springLength: 130, springConstant: 0.04 },
   },
   interaction: { hover: true, tooltipDelay: 120 },
 }
 
-function escapeHtml(s: string): string {
-  return s.replace(
-    /[&<>"']/g,
-    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string),
-  )
-}
-
-function buildTooltip(n: KnowledgeNode): string {
-  const typeLabel =
-    ({ Recipe: '菜谱', Ingredient: '食材', CookingStep: '烹饪步骤', Category: '分类' } as Record<
-      string,
-      string
-    >)[n.type] || n.type
-
-  // 返回纯文本（换行分隔），避免 HTML 字符串在 tooltip 中被转义显示
-  const lines: string[] = []
-  lines.push(`${escapeHtml(n.label)} (${escapeHtml(typeLabel)})`)
+/**
+ * 构建 vis-network tooltip HTML 元素。
+ * 返回 HTMLElement 而非字符串，避免 vis-network 将内容当作纯文本渲染（转义）。
+ */
+function buildTooltip(n: KnowledgeNode): HTMLElement {
+  const typeLabel: Record<string, string> = {
+    Recipe: '菜谱',
+    Ingredient: '食材',
+    CookingStep: '烹饪步骤',
+    Category: '分类',
+  }
+  const wrap = document.createElement('div')
+  wrap.style.cssText = 'max-width:280px;line-height:1.6'
+  const titleEl = document.createElement('b')
+  titleEl.textContent = n.label
+  wrap.appendChild(titleEl)
+  wrap.appendChild(document.createElement('br'))
+  const typeEl = document.createElement('span')
+  typeEl.style.cssText = 'color:#909399;font-size:11px'
+  typeEl.textContent = typeLabel[n.type] || n.type
+  wrap.appendChild(typeEl)
   if (n.properties) {
     for (const [k, v] of Object.entries(n.properties)) {
       if (v == null || v === '') continue
-      lines.push(`${PROP_LABELS[k] || k}: ${escapeHtml(String(v))}`)
+      wrap.appendChild(document.createElement('br'))
+      const span = document.createElement('span')
+      span.style.cssText = 'color:#606266'
+      span.textContent = `${PROP_LABELS[k] || k}: ${v}`
+      wrap.appendChild(span)
     }
   }
-  return lines.join('\n')
-}
-
-async function renderNetwork(g: KnowledgeGraph) {
-  if (!containerRef.value || !g.nodes.length) return
-  destroyNetwork()
-  // @ts-ignore vis-network/standalone 类型解析不稳定，按官方文档运行时用法
-  const { Network } = await import('vis-network/standalone')
-  if (!containerRef.value) return // 异步期间可能已关闭
-  const nodes = g.nodes.map((n) => ({
-    id: n.id,
-    label: n.label.length > 12 ? n.label.slice(0, 12) + '…' : n.label,
-    group: n.type,
-    title: buildTooltip(n),
-  }))
-  const edges = g.edges.map((e) => ({ from: e.from, to: e.to, arrows: 'to', title: e.type }))
-  network = new Network(containerRef.value, { nodes, edges }, OPTIONS)
+  return wrap
 }
 
 function destroyNetwork() {
@@ -110,34 +101,59 @@ function destroyNetwork() {
   }
 }
 
-async function loadAndRender(t: GraphType) {
-  loading.value = true
+async function loadAndRender(rid: string) {
+  loadingGraph.value = true
   error.value = ''
   graph.value = null
   try {
-    const g = await getKnowledgeGraph(t)
+    const g = await getRecipeGraph(rid)
     graph.value = g
-    await nextTick()
-    await renderNetwork(g)
+
+    // 保证 dialog 内容已渲染完毕、containerRef 可用
+    if (!containerRef.value || !g.nodes.length) return
+    await new Promise((r) => setTimeout(r, 50))
+    if (!containerRef.value) return
+
+    destroyNetwork()
+    // @ts-ignore vis-network/standalone 按官方文档运行时用法
+    const { Network } = await import('vis-network/standalone')
+    if (!containerRef.value) return
+
+    const nodes = g.nodes.map((n) => ({
+      id: n.id,
+      label: n.label.length > 12 ? n.label.slice(0, 12) + '…' : n.label,
+      group: n.type,
+      title: buildTooltip(n),
+    }))
+    const edges = g.edges.map((e) => ({ from: e.from, to: e.to, arrows: 'to', title: e.type }))
+    network = new Network(containerRef.value, { nodes, edges }, OPTIONS)
   } catch (e: any) {
     error.value = e?.response?.data?.detail || '加载知识图谱失败'
   } finally {
-    loading.value = false
+    loadingGraph.value = false
   }
 }
 
-// 弹窗打开后（动画结束，容器已在 DOM）首次渲染
-function onOpened() {
-  if (props.type) loadAndRender(props.type)
+function onRecipeChange(rid: string) {
+  if (rid) loadAndRender(rid)
 }
 
-// 弹窗已打开时切换类型 -> 重新加载
-watch(
-  () => props.type,
-  (t) => {
-    if (visible.value && t) loadAndRender(t)
-  },
-)
+async function onOpened() {
+  if (recipeOptions.value.length) return
+  loadingOptions.value = true
+  try {
+    recipeOptions.value = await listRecipeNames()
+  } catch {
+    ElMessage.error('加载菜谱列表失败')
+  } finally {
+    loadingOptions.value = false
+  }
+}
+
+/** el-select 过滤：匹配菜名或分类 */
+function filterMethod(query: string, item: RecipeName): boolean {
+  return item.name.includes(query) || item.category.includes(query)
+}
 
 onUnmounted(destroyNetwork)
 </script>
@@ -152,21 +168,48 @@ onUnmounted(destroyNetwork)
     @opened="onOpened"
     @closed="destroyNetwork"
   >
+    <!-- 菜谱下拉选择 -->
     <div class="kg-toolbar">
-      <div class="kg-legend">
-        <span v-for="l in legend" :key="l.label" class="kg-legend-item">
-          <i class="dot" :style="{ background: l.color }"></i>{{ l.label }}
-        </span>
+      <div class="kg-select-wrap">
+        <el-select
+          v-model="selectedRid"
+          placeholder="请选择一个菜谱"
+          filterable
+          clearable
+          :loading="loadingOptions"
+          :filter-method="filterMethod"
+          style="min-width: 320px"
+          @change="onRecipeChange"
+        >
+          <el-option
+            v-for="r in recipeOptions"
+            :key="r.id"
+            :label="`${r.name}（${r.category || '未分类'}）`"
+            :value="r.id"
+          >
+            <span class="opt-name">{{ r.name }}</span>
+            <span class="opt-cat">{{ r.category || '未分类' }}</span>
+          </el-option>
+        </el-select>
       </div>
-      <span v-if="graph" class="kg-note">
-        仅展示部分节点 · 主节点 {{ graph.counts.primary }} / 共 {{ graph.counts.total }} 个
+      <span v-if="graph" class="kg-note">共 {{ graph.counts.total }} 个节点</span>
+    </div>
+
+    <!-- 图例 -->
+    <div class="kg-legend">
+      <span v-for="l in legend" :key="l.label" class="kg-legend-item">
+        <i class="dot" :style="{ background: l.color }"></i>{{ l.label }}
       </span>
     </div>
 
-    <div v-loading="loading" class="kg-canvas-wrap">
+    <!-- 图谱画布 -->
+    <div v-loading="loadingGraph" class="kg-canvas-wrap">
       <el-alert v-if="error" :title="error" type="error" :closable="false" show-icon class="kg-error" />
+      <div v-else-if="!selectedRid" class="kg-empty">
+        <el-empty description="请从上方下拉框选择一个菜谱" :image-size="72" />
+      </div>
       <div v-else-if="graph && !graph.nodes.length" class="kg-empty">
-        <el-empty description="暂无图谱数据" :image-size="80" />
+        <el-empty description="该菜谱暂无图谱数据" :image-size="80" />
       </div>
       <div ref="containerRef" class="kg-canvas"></div>
     </div>
@@ -176,16 +219,31 @@ onUnmounted(destroyNetwork)
 <style scoped>
 .kg-toolbar {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
-  flex-wrap: wrap;
-  gap: 8px;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+.kg-select-wrap {
+  flex: 1;
+}
+.kg-note {
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+  flex-shrink: 0;
+}
+.opt-name {
+  font-weight: 500;
+}
+.opt-cat {
+  margin-left: 8px;
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
 }
 .kg-legend {
   display: flex;
   gap: 16px;
   flex-wrap: wrap;
+  margin-bottom: 12px;
 }
 .kg-legend-item {
   display: inline-flex;
@@ -199,10 +257,6 @@ onUnmounted(destroyNetwork)
   width: 12px;
   height: 12px;
   border-radius: 50%;
-}
-.kg-note {
-  font-size: 12px;
-  color: var(--el-text-color-secondary);
 }
 .kg-canvas-wrap {
   position: relative;
