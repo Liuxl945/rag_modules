@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, nextTick, onMounted } from 'vue'
+import { ref, nextTick, onMounted, reactive } from 'vue'
 import ChatMessage from '@/components/ChatMessage.vue'
 import MessageInput from '@/components/MessageInput.vue'
 import { streamQuery } from '@/utils/sse'
@@ -32,12 +32,14 @@ async function send(question: string) {
   messages.value.push({ id: nextId(), role: 'user', content: question })
 
   // 占位的助手消息（流式填充）
-  const assistantMsg: ChatMessageType = {
+  // 用 reactive 包裹：push 后仍通过同一 proxy 修改，回调里的属性赋值才能触发视图更新。
+  // 若用普通对象，push 进 ref 数组后 assistantMsg 仍指向原始对象，改属性不会更新视图。
+  const assistantMsg = reactive<ChatMessageType>({
     id: nextId(),
     role: 'assistant',
     content: '',
     streaming: true,
-  }
+  })
   messages.value.push(assistantMsg)
   await scrollToBottom()
 

@@ -86,6 +86,9 @@ export async function streamQuery(
       const { done, value } = await reader.read()
       if (done) break
       buffer += decoder.decode(value, { stream: true })
+      // sse-starlette 用 CRLF(\r\n) 作行结束符，事件间为 \r\n\r\n；
+      // 统一成 \n，否则下方 indexOf('\n\n') 永远匹配不到，事件全部丢失
+      buffer = buffer.replace(/\r\n?/g, '\n')
 
       // SSE 事件以空行（\n\n）分隔，可能一次读到多个完整事件
       let sep: number
