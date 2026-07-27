@@ -150,11 +150,6 @@ async function onOpened() {
   }
 }
 
-/** el-select 过滤：匹配菜名或分类 */
-function filterMethod(query: string, item: RecipeName): boolean {
-  return item.name.includes(query) || item.category.includes(query)
-}
-
 onUnmounted(destroyNetwork)
 </script>
 
@@ -177,7 +172,6 @@ onUnmounted(destroyNetwork)
           filterable
           clearable
           :loading="loadingOptions"
-          :filter-method="filterMethod"
           style="min-width: 320px"
           @change="onRecipeChange"
         >
