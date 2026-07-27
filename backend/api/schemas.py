@@ -64,3 +64,30 @@ class ErrorResponse(BaseModel):
     """错误响应"""
 
     detail: str
+
+
+# ---------------------------------------------------------------------------
+# 聊天会话（多会话历史）
+# ---------------------------------------------------------------------------
+class ConversationCreateRequest(BaseModel):
+    """新建会话请求（标题可选，缺省由后端取「新对话」占位）"""
+
+    title: Optional[str] = Field(None, description="会话标题，留空则用占位标题")
+
+
+class MessageCreateRequest(BaseModel):
+    """向会话追加一条消息"""
+
+    role: str = Field(..., description="user | assistant")
+    content: str = Field(..., description="消息内容")
+    analysis: Optional[dict] = None
+    sources: Optional[List[dict]] = None
+    elapsed: Optional[float] = None
+    error: Optional[bool] = False
+    timestamp: Optional[float] = None
+
+
+class ConversationRenameRequest(BaseModel):
+    """重命名会话"""
+
+    title: str = Field(..., min_length=1, description="新标题")

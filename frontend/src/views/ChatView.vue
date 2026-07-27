@@ -1,23 +1,15 @@
 <script setup lang="ts">
-import { ref, nextTick, onMounted, reactive } from 'vue'
+import { ref, computed, watch, nextTick, onMounted } from 'vue'
 import ChatMessage from '@/components/ChatMessage.vue'
 import MessageInput from '@/components/MessageInput.vue'
-import { streamQuery } from '@/utils/sse'
+import ConversationSidebar from '@/components/ConversationSidebar.vue'
 import { useSystemStore } from '@/stores/system'
-import type { ChatMessage as ChatMessageType } from '@/types'
+import { useConversationStore } from '@/stores/conversations'
 
 const systemStore = useSystemStore()
+const store = useConversationStore()
 
-const messages = ref<ChatMessageType[]>([])
-const loading = ref(false)
 const scrollRef = ref<HTMLDivElement | null>(null)
-let abortController: AbortController | null = null
-let idSeq = 0
-
-function nextId(): string {
-  idSeq += 1
-  return `msg-${idSeq}`
-}
 
 async function scrollToBottom() {
   await nextTick()
@@ -25,123 +17,82 @@ async function scrollToBottom() {
   if (el) el.scrollTop = el.scrollHeight
 }
 
-async function send(question: string) {
-  if (loading.value) return
+// 滚动触发键：消息数 + 末条内容长度 + 流式标记，覆盖新增/逐 token/状态切换
+const scrollKey = computed(() => {
+  const m = store.messages
+  const last = m[m.length - 1]
+  return `${m.length}:${last?.content?.length ?? 0}:${last?.streaming ? 1 : 0}`
+})
+watch(scrollKey, scrollToBottom)
 
-  // 用户消息
-  messages.value.push({ id: nextId(), role: 'user', content: question })
-
-  // 占位的助手消息（流式填充）
-  // 用 reactive 包裹：push 后仍通过同一 proxy 修改，回调里的属性赋值才能触发视图更新。
-  // 若用普通对象，push 进 ref 数组后 assistantMsg 仍指向原始对象，改属性不会更新视图。
-  const assistantMsg = reactive<ChatMessageType>({
-    id: nextId(),
-    role: 'assistant',
-    content: '',
-    streaming: true,
-  })
-  messages.value.push(assistantMsg)
-  await scrollToBottom()
-
-  loading.value = true
-  abortController = new AbortController()
-
-  await streamQuery(
-    question,
-    null,
-    {
-      onAnalysis: ({ analysis, sources }) => {
-        assistantMsg.analysis = analysis
-        assistantMsg.sources = sources
-        scrollToBottom()
-      },
-      onChunk: ({ content }) => {
-        assistantMsg.content += content
-        scrollToBottom()
-      },
-      onDone: ({ elapsed }) => {
-        assistantMsg.streaming = false
-        if (elapsed != null) assistantMsg.elapsed = elapsed
-        loading.value = false
-        abortController = null
-      },
-      onError: ({ message }) => {
-        assistantMsg.streaming = false
-        assistantMsg.error = true
-        assistantMsg.content = assistantMsg.content
-          ? `${assistantMsg.content}\n\n⚠️ ${message}`
-          : `⚠️ ${message}`
-        loading.value = false
-        abortController = null
-      },
-    },
-    abortController.signal,
-  )
-
-  // 流提前结束但 loading 未清（如 abort）
-  if (loading.value) {
-    assistantMsg.streaming = false
-    loading.value = false
-    abortController = null
-  }
+function send(question: string) {
+  store.sendMessage(question)
 }
 
 function stop() {
-  if (abortController) {
-    abortController.abort()
-    abortController = null
-  }
-  loading.value = false
-  const last = messages.value[messages.value.length - 1]
-  if (last && last.role === 'assistant' && last.streaming) {
-    last.streaming = false
-    if (!last.content) last.content = '（已停止生成）'
-  }
+  store.stop()
 }
 
 onMounted(() => {
   systemStore.startPolling()
+  store.fetchConversations()
 })
 </script>
 
 <template>
   <div class="chat-view">
-    <!-- 消息列表 -->
-    <div ref="scrollRef" class="messages">
-      <div v-if="!messages.length" class="empty">
-        <div class="empty-icon">🍳</div>
-        <h2>尝尝咸淡 · RAG 烹饪助手</h2>
-        <p>基于图 RAG 的智能烹饪问答，问我任何关于菜谱、食材搭配、烹饪方法的问题。</p>
-        <div class="suggestions">
-          <el-button round @click="send('红烧肉怎么做？')">红烧肉怎么做？</el-button>
-          <el-button round @click="send('鸡肉配什么蔬菜好？')">鸡肉配什么蔬菜好？</el-button>
-          <el-button round @click="send('川菜有哪些特色菜？')">川菜有哪些特色菜？</el-button>
+    <!-- 侧边栏：历史会话 -->
+    <ConversationSidebar />
+
+    <!-- 聊天主区 -->
+    <div class="chat-main">
+      <!-- 消息列表 -->
+      <div ref="scrollRef" class="messages">
+        <div v-if="!store.messages.length" class="empty">
+          <div class="empty-icon">🍳</div>
+          <h2>尝尝咸淡 · RAG 烹饪助手</h2>
+          <p>基于图 RAG 的智能烹饪问答，问我任何关于菜谱、食材搭配、烹饪方法的问题。</p>
+          <div class="suggestions">
+            <el-button round @click="send('红烧肉怎么做？')">红烧肉怎么做？</el-button>
+            <el-button round @click="send('鸡肉配什么蔬菜好？')">鸡肉配什么蔬菜好？</el-button>
+            <el-button round @click="send('川菜有哪些特色菜？')">川菜有哪些特色菜？</el-button>
+          </div>
         </div>
+
+        <ChatMessage v-for="m in store.messages" :key="m.id" :message="m" />
       </div>
 
-      <ChatMessage v-for="m in messages" :key="m.id" :message="m" />
+      <!-- 输入区 -->
+      <MessageInput
+        :loading="store.loading"
+        :disabled="!systemStore.ready"
+        @send="send"
+        @stop="stop"
+      />
+
+      <!-- 未就绪提示 -->
+      <el-alert
+        v-if="!systemStore.ready"
+        :title="systemStore.message || '系统未就绪'"
+        type="warning"
+        :closable="false"
+        show-icon
+        class="status-alert"
+      />
     </div>
-
-    <!-- 输入区 -->
-    <MessageInput :loading="loading" :disabled="!systemStore.ready" @send="send" @stop="stop" />
-
-    <!-- 未就绪提示 -->
-    <el-alert
-      v-if="!systemStore.ready"
-      :title="systemStore.message || '系统未就绪'"
-      type="warning"
-      :closable="false"
-      show-icon
-      class="status-alert"
-    />
   </div>
 </template>
 
 <style scoped>
 .chat-view {
   display: flex;
-  flex-direction: column;
   height: 100%;
+}
+.chat-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
   position: relative;
 }
 .messages {

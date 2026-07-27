@@ -18,6 +18,7 @@ from fastapi import APIRouter, HTTPException
 from sse_starlette.sse import EventSourceResponse
 
 from .state import state
+from .chat_history import conversation_store
 from .schemas import (
     QueryRequest,
     QueryResponse,
@@ -25,6 +26,9 @@ from .schemas import (
     SourceDoc,
     HealthResponse,
     RebuildResponse,
+    ConversationCreateRequest,
+    MessageCreateRequest,
+    ConversationRenameRequest,
 )
 
 logger = logging.getLogger(__name__)
@@ -207,7 +211,72 @@ async def query_stream(req: QueryRequest):
 # ---------------------------------------------------------------------------
 @router.post("/knowledge-base/rebuild", response_model=RebuildResponse)
 async def rebuild_knowledge_base():
-    """重建知识库（删除现有向量数据并重新构建）。"""
+    """重建知识库（删除现有的向量数据并重新构建）。"""
     system = _require_system()
     result = await asyncio.to_thread(system.rebuild_knowledge_base)
     return RebuildResponse(**result)
+
+
+# ---------------------------------------------------------------------------
+# 聊天会话（多会话历史）
+# ---------------------------------------------------------------------------
+@router.get("/conversations")
+async def list_conversations():
+    """返回所有会话的元数据列表（不含消息全文），按最近更新倒序。"""
+    return {"conversations": conversation_store.list_conversations()}
+
+
+@router.post("/conversations")
+async def create_conversation(req: ConversationCreateRequest):
+    """新建一个空会话。"""
+    conv = conversation_store.create_conversation(req.title)
+    return {"conversation": conv}
+
+
+@router.get("/conversations/{conv_id}")
+async def get_conversation(conv_id: str):
+    """返回指定会话的完整内容（含 messages）。"""
+    conv = conversation_store.get_conversation(conv_id)
+    if conv is None:
+        raise HTTPException(status_code=404, detail="会话不存在")
+    return {"conversation": conv}
+
+
+@router.post("/conversations/{conv_id}/messages")
+async def append_message(conv_id: str, req: MessageCreateRequest):
+    """向指定会话追加一条消息。
+
+    返回 {message, conversation}：conversation 为更新后的元数据，
+    供前端刷新侧边栏（标题/更新时间/消息数/预览）。
+    """
+    result = conversation_store.append_message(
+        conv_id=conv_id,
+        role=req.role,
+        content=req.content,
+        analysis=req.analysis,
+        sources=req.sources,
+        elapsed=req.elapsed,
+        error=req.error,
+        timestamp=req.timestamp,
+    )
+    if result is None:
+        raise HTTPException(status_code=404, detail="会话不存在")
+    return result
+
+
+@router.patch("/conversations/{conv_id}")
+async def rename_conversation(conv_id: str, req: ConversationRenameRequest):
+    """重命名会话。"""
+    meta = conversation_store.rename_conversation(conv_id, req.title)
+    if meta is None:
+        raise HTTPException(status_code=404, detail="会话不存在")
+    return {"conversation": meta}
+
+
+@router.delete("/conversations/{conv_id}")
+async def delete_conversation(conv_id: str):
+    """删除会话。"""
+    ok = conversation_store.delete_conversation(conv_id)
+    if not ok:
+        raise HTTPException(status_code=404, detail="会话不存在")
+    return {"ok": True}

@@ -68,3 +68,18 @@ export interface ChatMessage {
   streaming?: boolean
   error?: boolean
 }
+
+/** 会话元数据（侧边栏列表项，不含消息全文） */
+export interface ConversationMeta {
+  id: string
+  title: string
+  created_at: number
+  updated_at: number
+  message_count: number
+  last_message_preview?: string
+}
+
+/** 完整会话（含消息列表） */
+export interface Conversation extends ConversationMeta {
+  messages: ChatMessage[]
+}
