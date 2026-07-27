@@ -83,6 +83,27 @@ async def stats():
 
 
 # ---------------------------------------------------------------------------
+# 知识图谱子图（可视化用）
+# ---------------------------------------------------------------------------
+@router.get("/knowledge-graph")
+async def knowledge_graph(type: str, limit: int = 15, neighbor_limit: int = 6):
+    """返回某类节点（recipes/ingredients/cooking_steps）的有界知识子图。
+
+    Query 参数：
+        type: recipes | ingredients | cooking_steps
+        limit: 主节点数量上限（1-50，默认 15）
+        neighbor_limit: 每主节点邻居数量上限（1-12，默认 6）
+    """
+    system = _require_system()
+    try:
+        return await asyncio.to_thread(
+            system.get_knowledge_subgraph, type, limit, neighbor_limit
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+# ---------------------------------------------------------------------------
 # 非流式问答
 # ---------------------------------------------------------------------------
 @router.post("/query", response_model=QueryResponse)

@@ -466,6 +466,15 @@ class AdvancedGraphRAGSystem:
 
         return result
 
+    def get_knowledge_subgraph(self, node_type: str, limit: int = 15, neighbor_limit: int = 6) -> dict:
+        """返回某类节点（recipes/ingredients/cooking_steps）的有界知识子图，供前端可视化。
+
+        透传给 data_module.get_knowledge_subgraph；系统未就绪时抛 ValueError。
+        """
+        if not self.system_ready:
+            raise ValueError("系统未就绪，请先构建知识库")
+        return self.data_module.get_knowledge_subgraph(node_type, limit, neighbor_limit)
+
     def rebuild_knowledge_base(self) -> dict:
         """重建知识库（删除现有向量数据并重新构建），无确认 prompt。
 

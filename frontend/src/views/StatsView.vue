@@ -3,10 +3,21 @@ import { ref, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getStats, rebuildKnowledgeBase } from '@/api'
 import type { SystemStats } from '@/types'
+import KnowledgeGraphDialog from '@/components/KnowledgeGraphDialog.vue'
+
+type GraphType = 'recipes' | 'ingredients' | 'cooking_steps'
 
 const stats = ref<SystemStats | null>(null)
 const loading = ref(false)
 const rebuilding = ref(false)
+
+// 知识图谱弹窗
+const graphVisible = ref(false)
+const graphType = ref<GraphType | null>(null)
+function openGraph(t: GraphType) {
+  graphType.value = t
+  graphVisible.value = true
+}
 
 async function refresh() {
   loading.value = true
@@ -46,13 +57,13 @@ async function rebuild() {
   }
 }
 
-// 知识库计数卡片
+// 知识库计数卡片（前三个可点击查看知识图谱）
 const kbCounts = computed(() => {
   const kb = stats.value?.knowledge_base || {}
   return [
-    { label: '菜谱', value: (kb.total_recipes as number) ?? 0 },
-    { label: '食材', value: (kb.total_ingredients as number) ?? 0 },
-    { label: '烹饪步骤', value: (kb.total_cooking_steps as number) ?? 0 },
+    { label: '菜谱', value: (kb.total_recipes as number) ?? 0, graphType: 'recipes' as GraphType },
+    { label: '食材', value: (kb.total_ingredients as number) ?? 0, graphType: 'ingredients' as GraphType },
+    { label: '烹饪步骤', value: (kb.total_cooking_steps as number) ?? 0, graphType: 'cooking_steps' as GraphType },
     { label: '文档', value: (kb.total_documents as number) ?? 0 },
     { label: '文本块', value: (kb.total_chunks as number) ?? 0 },
   ]
@@ -99,7 +110,14 @@ onMounted(refresh)
       <template #header>知识库统计</template>
       <el-row :gutter="16" justify="center">
         <el-col v-for="item in kbCounts" :key="item.label" :span="4">
-          <el-statistic :title="item.label" :value="item.value" />
+          <div
+            class="stat-card"
+            :class="{ clickable: item.graphType }"
+            @click="item.graphType && openGraph(item.graphType)"
+          >
+            <el-statistic :title="item.label" :value="item.value" />
+            <div v-if="item.graphType" class="card-hint">🔗 查看知识图谱</div>
+          </div>
         </el-col>
       </el-row>
       <el-divider />
@@ -124,6 +142,9 @@ onMounted(refresh)
       </div>
       <el-empty v-else description="暂无查询记录" :image-size="80" />
     </el-card>
+
+    <!-- 知识图谱弹窗 -->
+    <KnowledgeGraphDialog v-model="graphVisible" :type="graphType" />
   </div>
 </template>
 
@@ -144,6 +165,23 @@ onMounted(refresh)
 }
 .section {
   margin-bottom: 16px;
+}
+.stat-card {
+  padding: 4px 0;
+  border-radius: 6px;
+  text-align: center;
+}
+.stat-card.clickable {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.stat-card.clickable:hover {
+  background: var(--el-fill-color-light);
+}
+.card-hint {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--el-color-primary);
 }
 .vector-line {
   color: var(--el-text-color-regular);

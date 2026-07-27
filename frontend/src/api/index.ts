@@ -7,6 +7,7 @@ import type {
   ConversationMeta,
   Conversation,
   ChatMessage,
+  KnowledgeGraph,
 } from '@/types'
 
 const http = axios.create({
@@ -23,6 +24,18 @@ export async function getHealth(): Promise<HealthResponse> {
 /** 系统统计 */
 export async function getStats(): Promise<SystemStats> {
   const { data } = await http.get<SystemStats>('/stats')
+  return data
+}
+
+/** 获取某类节点的有界知识子图（可视化用） */
+export async function getKnowledgeGraph(
+  type: 'recipes' | 'ingredients' | 'cooking_steps',
+  limit: number = 10,
+  neighborLimit: number = 4,
+): Promise<KnowledgeGraph> {
+  const { data } = await http.get<KnowledgeGraph>('/knowledge-graph', {
+    params: { type, limit, neighbor_limit: neighborLimit },
+  })
   return data
 }
 

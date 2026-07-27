@@ -643,6 +643,189 @@ class GraphDataPreparationModule:
 
         return stats
 
+    # ========== 知识子图（供前端可视化） ==========
+
+    @staticmethod
+    def _primary_label(labels: List[str]) -> str:
+        """从标签列表中取主标签（Recipe/Ingredient/CookingStep/Category 优先）。"""
+        for lbl in ("Recipe", "Ingredient", "CookingStep", "Category"):
+            if lbl in labels:
+                return lbl
+        return labels[0] if labels else "Unknown"
+
+    @staticmethod
+    def _summarize_properties(label: str, props: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+        """按节点类型精简属性，供前端 tooltip 展示，避免传输冗余字段。"""
+        if not props:
+            return {}
+        key_map = {
+            "Recipe": ("category", "cuisineType", "difficulty", "servings"),
+            "Ingredient": ("category", "description"),
+            "CookingStep": ("description", "methods", "tools", "timeEstimate"),
+        }
+        keys = key_map.get(label, ())
+        return {k: props[k] for k in keys if props.get(k) is not None}
+
+    def _add_neighbor(
+        self,
+        nodes: Dict[str, Dict[str, Any]],
+        edges: List[Dict[str, Any]],
+        *,
+        neighbor_id: str,
+        neighbor_labels: List[str],
+        neighbor_name: Optional[str],
+        neighbor_props: Optional[Dict[str, Any]],
+        from_id: str,
+        to_id: str,
+        rel_type: str,
+    ) -> None:
+        """把邻居节点加入 nodes（去重），并追加一条 from_id->to_id 的边。
+
+        边方向统一为 Recipe->邻居（REQUIRES/CONTAINS_STEP/BELONGS_TO_CATEGORY）。
+        """
+        if neighbor_id and neighbor_id not in nodes:
+            label = self._primary_label(neighbor_labels)
+            nodes[neighbor_id] = {
+                "id": neighbor_id,
+                "label": neighbor_name or neighbor_id,
+                "type": label,
+                "properties": self._summarize_properties(label, neighbor_props),
+            }
+        edges.append({"from": from_id, "to": to_id, "type": rel_type})
+
+    def get_knowledge_subgraph(
+        self, node_type: str, limit: int = 15, neighbor_limit: int = 6
+    ) -> Dict[str, Any]:
+        """返回某类节点的有界知识子图，供前端可视化。
+
+        主节点取自内存列表（recipes/ingredients/cooking_steps）前 limit 个，
+        元数据免查库；邻居与关系通过 Neo4j 查询，每主节点邻居数封顶 neighbor_limit，
+        避免超大图（食材/步骤各近 3000）无法渲染。
+
+        Args:
+            node_type: recipes | ingredients | cooking_steps
+            limit: 主节点数量上限（clamp 到 [1,50]）
+            neighbor_limit: 每个主节点的邻居数量上限（clamp 到 [1,12]）
+
+        Returns:
+            {"nodes": [...], "edges": [...], "counts": {"primary": N, "total": M}}
+
+        Raises:
+            ValueError: node_type 非法
+        """
+        node_type = (node_type or "").lower()
+        if node_type == "recipes":
+            primary_nodes = self.recipes
+        elif node_type == "ingredients":
+            primary_nodes = self.ingredients
+        elif node_type == "cooking_steps":
+            primary_nodes = self.cooking_steps
+        else:
+            raise ValueError(
+                f"未知节点类型: {node_type}（可选: recipes/ingredients/cooking_steps）"
+            )
+
+        limit = max(1, min(int(limit or 15), 50))
+        neighbor_limit = max(1, min(int(neighbor_limit or 6), 12))
+        primary_nodes = primary_nodes[:limit]
+        if not primary_nodes:
+            return {"nodes": [], "edges": [], "counts": {"primary": 0, "total": 0}}
+
+        primary_ids = [n.node_id for n in primary_nodes]
+        nodes: Dict[str, Dict[str, Any]] = {}
+        edges: List[Dict[str, Any]] = []
+        neighbor_count: Dict[str, int] = {pid: 0 for pid in primary_ids}
+
+        # 主节点（元数据来自内存）
+        for n in primary_nodes:
+            label = self._primary_label(n.labels)
+            nodes[n.node_id] = {
+                "id": n.node_id,
+                "label": n.name or n.node_id,
+                "type": label,
+                "properties": self._summarize_properties(label, n.properties),
+            }
+
+        # 邻居 + 关系（查 Neo4j），每主节点邻居封顶 neighbor_limit
+        with self.driver.session() as session:
+            if node_type == "recipes":
+                # Recipe -> Ingredient / CookingStep / Category
+                # Category 节点没有 nodeId，用 'cat:'+name 作 id（与数字 nodeId 不冲突）
+                # 按关系类型分别封顶：Category 仅取 1 个，其余每类取 neighbor_limit 个，
+                # 保证每个菜谱同时出现食材/步骤/分类三类邻居，而非被字母序挤掉。
+                query = """
+                UNWIND $ids AS rid
+                MATCH (r:Recipe {nodeId: rid})-[rel]->(n)
+                WHERE n:Ingredient OR n:CookingStep OR n:Category
+                RETURN rid AS rid, type(rel) AS rel_type,
+                       COALESCE(n.nodeId, 'cat:' + n.name) AS nid,
+                       labels(n) AS nlabels, n.name AS nname,
+                       properties(n) AS nprops
+                ORDER BY rid, rel_type, nname
+                """
+                per_type_count: Dict[tuple, int] = {}
+                type_cap = {"BELONGS_TO_CATEGORY": 1}
+                for rec in session.run(query, {"ids": primary_ids}):
+                    rid = rec["rid"]
+                    rel_type = rec["rel_type"]
+                    key = (rid, rel_type)
+                    cap = type_cap.get(rel_type, neighbor_limit)
+                    if per_type_count.get(key, 0) >= cap:
+                        continue
+                    per_type_count[key] = per_type_count.get(key, 0) + 1
+                    self._add_neighbor(
+                        nodes, edges,
+                        neighbor_id=rec["nid"], neighbor_labels=rec["nlabels"],
+                        neighbor_name=rec["nname"], neighbor_props=rec["nprops"],
+                        from_id=rid, to_id=rec["nid"], rel_type=rel_type,
+                    )
+
+            elif node_type == "ingredients":
+                # Ingredient <- REQUIRES - Recipe  =>  边 Recipe -> Ingredient
+                query = """
+                UNWIND $ids AS iid
+                MATCH (i:Ingredient {nodeId: iid})<-[rel:REQUIRES]-(r:Recipe)
+                RETURN iid AS iid, r.nodeId AS rid, r.name AS rname, properties(r) AS rprops
+                ORDER BY iid, rname
+                """
+                for rec in session.run(query, {"ids": primary_ids}):
+                    iid = rec["iid"]
+                    if neighbor_count.get(iid, 0) >= neighbor_limit:
+                        continue
+                    neighbor_count[iid] += 1
+                    self._add_neighbor(
+                        nodes, edges,
+                        neighbor_id=rec["rid"], neighbor_labels=["Recipe"],
+                        neighbor_name=rec["rname"], neighbor_props=rec["rprops"],
+                        from_id=rec["rid"], to_id=iid, rel_type="REQUIRES",
+                    )
+
+            else:  # cooking_steps
+                # CookingStep <- CONTAINS_STEP - Recipe  =>  边 Recipe -> CookingStep
+                query = """
+                UNWIND $ids AS sid
+                MATCH (s:CookingStep {nodeId: sid})<-[rel:CONTAINS_STEP]-(r:Recipe)
+                RETURN sid AS sid, r.nodeId AS rid, r.name AS rname, properties(r) AS rprops
+                ORDER BY sid, rname
+                """
+                for rec in session.run(query, {"ids": primary_ids}):
+                    sid = rec["sid"]
+                    if neighbor_count.get(sid, 0) >= neighbor_limit:
+                        continue
+                    neighbor_count[sid] += 1
+                    self._add_neighbor(
+                        nodes, edges,
+                        neighbor_id=rec["rid"], neighbor_labels=["Recipe"],
+                        neighbor_name=rec["rname"], neighbor_props=rec["rprops"],
+                        from_id=rec["rid"], to_id=sid, rel_type="CONTAINS_STEP",
+                    )
+
+        return {
+            "nodes": list(nodes.values()),
+            "edges": edges,
+            "counts": {"primary": len(primary_ids), "total": len(nodes)},
+        }
+
     def __del__(self):
         """析构函数：确保关闭数据库连接（防止资源泄漏）。"""
         self.close()

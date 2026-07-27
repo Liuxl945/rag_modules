@@ -83,3 +83,25 @@ export interface ConversationMeta {
 export interface Conversation extends ConversationMeta {
   messages: ChatMessage[]
 }
+
+/** 知识图谱节点（可视化用） */
+export interface KnowledgeNode {
+  id: string
+  label: string
+  type: 'Recipe' | 'Ingredient' | 'CookingStep' | 'Category' | string
+  properties?: Record<string, any>
+}
+
+/** 知识图谱边（关系） */
+export interface KnowledgeEdge {
+  from: string
+  to: string
+  type: string
+}
+
+/** 知识子图（节点 + 边 + 计数） */
+export interface KnowledgeGraph {
+  nodes: KnowledgeNode[]
+  edges: KnowledgeEdge[]
+  counts: { primary: number; total: number }
+}
