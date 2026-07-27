@@ -388,8 +388,116 @@ class AdvancedGraphRAGSystem:
             logger.error(f"问答处理失败: {e}")
             return f"抱歉，处理问题时出现错误：{str(e)}", None
 
+    # ------------------------------------------------------------------
+    # Web API 支持方法（数据返回型，不 print / 不 input，供 FastAPI 调用）
+    # ------------------------------------------------------------------
 
+    def retrieve(self, question: str, top_k: Optional[int] = None):
+        """仅执行路由 + 检索，不生成答案（供 Web API 获取来源与分析）。
 
+        Args:
+            question: 用户问题
+            top_k: 返回结果数量上限（None 时使用 config.top_k）
+
+        Returns:
+            (documents, analysis) 元组：
+                - documents: 检索结果 Document 列表
+                - analysis: QueryAnalysis 对象
+
+        Raises:
+            ValueError: 系统未就绪时
+        """
+        if not self.system_ready:
+            raise ValueError("系统未就绪，请先构建知识库")
+
+        return self.query_router.route_query(question, top_k or self.config.top_k)
+
+    @staticmethod
+    def analysis_to_dict(analysis) -> dict:
+        """将 QueryAnalysis（含 SearchStrategy 枚举）序列化为可 JSON 化的字典。"""
+        return {
+            "recommended_strategy": analysis.recommended_strategy.value,
+            "query_complexity": analysis.query_complexity,
+            "relationship_intensity": analysis.relationship_intensity,
+            "reasoning_required": analysis.reasoning_required,
+            "entity_count": analysis.entity_count,
+            "confidence": analysis.confidence,
+            "reasoning": analysis.reasoning,
+        }
+
+    @staticmethod
+    def sources_from_documents(documents: List) -> List[dict]:
+        """从检索结果 Document 列表提取来源摘要信息。"""
+        sources = []
+        for doc in documents:
+            sources.append({
+                "recipe_name": doc.metadata.get('recipe_name', '未知内容'),
+                "search_type": doc.metadata.get('search_type', doc.metadata.get('route_strategy', 'unknown')),
+                "score": float(doc.metadata.get('final_score', doc.metadata.get('relevance_score', 0))),
+                "content_preview": doc.page_content.strip()[:200],
+            })
+        return sources
+
+    def get_system_stats(self) -> dict:
+        """返回系统运行统计（路由占比 + 知识库统计 + Milvus 统计 + 就绪标记）。
+
+        与 _show_system_stats / _show_knowledge_base_stats 的区别：本方法返回字典而非打印，
+        供 Web API 直接序列化返回前端。
+        """
+        result = {"ready": self.system_ready}
+
+        # 路由统计（各策略使用次数和占比）
+        if self.query_router:
+            result["route_stats"] = self.query_router.get_route_statistics()
+        else:
+            result["route_stats"] = {"total_queries": 0}
+
+        # 知识库统计（菜谱/食材/步骤/文档/分块 + 分类）
+        if self.data_module:
+            result["knowledge_base"] = self.data_module.get_statistics()
+        else:
+            result["knowledge_base"] = {}
+
+        # Milvus 统计（向量索引记录数）
+        if self.index_module:
+            result["milvus"] = self.index_module.get_collection_stats()
+        else:
+            result["milvus"] = {}
+
+        return result
+
+    def rebuild_knowledge_base(self) -> dict:
+        """重建知识库（删除现有向量数据并重新构建），无确认 prompt。
+
+        与 _rebuild_knowledge_base 的区别：本方法不做 input() 确认，
+        供 Web API 调用（确认逻辑由前端 / API 层负责）。
+
+        Returns:
+            {"success": bool, "message": str, "stats": dict}
+        """
+        try:
+            # 删除现有的 Milvus 集合
+            if self.index_module.has_collection():
+                self.index_module.delete_collection()
+
+            # 清理菜谱文档缓存，确保从 Neo4j 重新构建
+            self.data_module.clear_documents_cache()
+
+            # 重新构建知识库
+            self.build_knowledge_base()
+
+            return {
+                "success": True,
+                "message": "知识库重建完成",
+                "stats": self.get_system_stats(),
+            }
+        except Exception as e:
+            logger.error(f"重建知识库失败: {e}")
+            return {
+                "success": False,
+                "message": f"重建失败：{e}",
+                "stats": self.get_system_stats(),
+            }
 
     def run_interactive(self):
         """运行交互式问答循环。
@@ -501,27 +609,12 @@ class AdvancedGraphRAGSystem:
             print("❌ 重建操作已取消")
             return
 
-        try:
-            # 删除现有的 Milvus 集合
-            print("删除现有的Milvus集合...")
-            if self.index_module.delete_collection():
-                print("✅ 现有集合已删除")
-            else:
-                print("删除集合时出现问题，继续重建...")
-
-            # 清理菜谱文档缓存，确保从 Neo4j 重新构建（而非读旧缓存）
-            print("清理菜谱文档缓存...")
-            self.data_module.clear_documents_cache()
-
-            # 重新构建知识库（复用 build_knowledge_base 流程）
-            print("开始重建知识库...")
-            self.build_knowledge_base()
-
+        # 复用 Web API 共享的重建逻辑（无确认 prompt 版本）
+        result = self.rebuild_knowledge_base()
+        if result["success"]:
             print("✅ 知识库重建完成！")
-
-        except Exception as e:
-            logger.error(f"重建知识库失败: {e}")
-            print(f"❌ 重建失败: {e}")
+        else:
+            print(f"❌ 重建失败: {result['message']}")
             print("建议：请检查Milvus服务状态后重试")
 
     def _cleanup(self):
