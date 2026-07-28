@@ -232,10 +232,12 @@ export interface EvaluationDatasetItem {
 /** 指标列名 -> 得分（null 表示该指标未跑或单样本异常） */
 export type EvaluationScores = Record<string, number | null>
 
-/** 单样本评估结果（question + 各指标得分） */
+/** 单样本评估结果（question + 各指标得分；answer/contexts 落盘供排查 context 质量） */
 export interface EvaluationSampleResult {
   question: string
-  [metric: string]: string | number | null
+  answer?: string
+  contexts?: string[]
+  [metric: string]: string | number | null | string[] | undefined
 }
 
 /** 测试集评估运行完整结果 */

@@ -97,19 +97,30 @@ def _require_ragas():
 # ---------------------------------------------------------------------------
 # 指标元信息（中文标签 + 是否需 ground_truth），供前后端一致展示
 # ---------------------------------------------------------------------------
-# key = RAGAS 结果 DataFrame 的列名
+# key = RAGAS 结果 DataFrame 的列名（即 metric.name）。
+# 不同 ragas 版本列名不同，这里把各版本的列名都登记上，label 统一兜底。
 METRIC_META: Dict[str, Dict[str, Any]] = {
     "faithfulness": {"label": "忠实度", "needs_reference": False,
                      "desc": "答案是否可由检索上下文支持（无幻觉）"},
+    # ragas 0.2+ 的 ResponseRelevancy 在 0.4.x 实际输出列名是 answer_relevancy
     "response_relevancy": {"label": "答案相关性", "needs_reference": False,
                            "desc": "答案是否切题（生成反推问题与原问题相似度）"},
+    "answer_relevancy": {"label": "答案相关性", "needs_reference": False,
+                         "desc": "答案是否切题（生成反推问题与原问题相似度）"},
     "context_recall": {"label": "上下文召回率", "needs_reference": True,
                        "desc": "参考答案是否都能被检索上下文覆盖"},
+    # ragas 0.2+ 的 LLMContextPrecisionWithReference 实际输出列名是
+    # llm_context_precision_with_reference（旧版 0.1 是 context_precision）
+    "llm_context_precision_with_reference": {"label": "上下文精确率", "needs_reference": True,
+                                             "desc": "相关检索项是否排在前面（MRR 风格）"},
     "context_precision": {"label": "上下文精确率", "needs_reference": True,
                           "desc": "相关检索项是否排在前面（MRR 风格）"},
-    # 0.1 别名兜底（列名可能不同）
-    "answer_relevancy": {"label": "答案相关性", "needs_reference": False, "desc": "答案是否切题"},
 }
+
+
+def metric_label(key: str) -> str:
+    """指标列名 -> 中文标签（未知列名原样返回）。供路由层 / 前端一致展示。"""
+    return METRIC_META.get(key, {}).get("label", key)
 
 
 def _is_nan(v) -> bool:
@@ -179,17 +190,23 @@ class RAGASEvaluationModule:
             api_key=api_key,
             temperature=0,      # 评估需确定性，温度 0
             timeout=120,
+            max_retries=6,      # 429/连接错误自动重试，缓解 DeepSeek 限流导致的整批 NaN
         )
         # 复用 BGE embeddings（ResponseRelevancy 需要：生成反推问题并 embedding 比对）
         self._embeddings = HuggingFaceEmbeddings(
             model_name=self.config.embedding_model,
             encode_kwargs={"normalize_embeddings": True},
         )
-        max_workers = max(1, int(os.getenv("RAGAS_MAX_WORKERS", "3")))
+        # 默认并发 2（max_workers）：RAGAS 每样本会触发多次 judge LLM 调用
+        # （faithfulness 按断言数、precision 按 context 条数，单样本常 10+ 次）。
+        # 并发过高（如 3+）在长答案上偶发 429/超时，重试耗尽后整批返回 NaN
+        # （answer_relevancy 尤甚）。2 是速度与稳定性的平衡；如仍遇 NaN 可设
+        # RAGAS_MAX_WORKERS=1 串行，或换更强的 judge（RAGAS_JUDGE_MODEL）。
+        max_workers = max(1, int(os.getenv("RAGAS_MAX_WORKERS", "2")))
         self._run_config = _RunConfig(
             max_workers=max_workers,
-            max_retries=3,
-            timeout=180,
+            max_retries=5,
+            timeout=300,
         )
         logger.info(f"RAGAS 评估引擎就绪：judge={judge_model}, workers={max_workers}")
 
@@ -236,6 +253,11 @@ class RAGASEvaluationModule:
         if with_reference:
             metrics += [_LLMContextRecall(), _LLMContextPrecisionWithReference()]
 
+        # 各指标实际输出的列名：读取 metric.name，随 ragas 版本自适应
+        # （0.4.x: ResponseRelevancy→answer_relevancy, LLMContextPrecisionWithReference
+        #   →llm_context_precision_with_reference）。不再依赖硬编码列名，避免漏取指标。
+        metric_names = [m.name for m in metrics]
+
         scorer = _evaluate(
             dataset=dataset,
             metrics=metrics,
@@ -248,11 +270,21 @@ class RAGASEvaluationModule:
         df = scorer.to_pandas()
         records = df.to_dict(orient="records")
 
-        # 提取实际产出的指标列（兼容 0.1/0.2 列名差异）
-        metric_keys = [k for k in METRIC_META if k in df.columns]
+        # 实际出现的指标列（metric.name 理论上都在 df.columns；防御性过滤 + 缺失告警）
+        metric_keys = [m for m in metric_names if m in df.columns]
+        missing = [m for m in metric_names if m not in df.columns]
+        if missing:
+            logger.warning(f"以下指标未出现在结果列中（可能整体异常被吞）: {missing}")
+
         results = []
         for i, rec in enumerate(records):
-            item: Dict[str, Any] = {"question": samples[i].get("question", "")}
+            s = samples[i] if i < len(samples) else {}
+            item: Dict[str, Any] = {"question": s.get("question", "")}
+            # 落盘 answer / contexts，便于排查 context 质量（不计入指标列 metrics）
+            if s.get("answer") is not None:
+                item["answer"] = s["answer"]
+            if s.get("contexts"):
+                item["contexts"] = list(s["contexts"])
             for mk in metric_keys:
                 val = rec.get(mk)
                 item[mk] = None if _is_nan(val) else round(float(val), 4)

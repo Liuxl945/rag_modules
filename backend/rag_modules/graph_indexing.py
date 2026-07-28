@@ -383,7 +383,7 @@ class GraphIndexingModule:
         for entity_id, entity_kv in self.entity_kv_store.items():
             name_to_entities[entity_kv.entity_name].append(entity_id)
 
-        # 合并重复实体：保留第一个，将其他实体的内容追加到保留条目中。
+        # 合并重复实体：保留第一个，仅合并「主实体中尚未出现」的新信息。
         entities_to_remove = []
         for name, entity_ids in name_to_entities.items():
             if len(entity_ids) > 1:
@@ -391,11 +391,25 @@ class GraphIndexingModule:
                 primary_id = entity_ids[0]
                 primary_entity = self.entity_kv_store[primary_id]
 
+                # 收集主实体已有的内容行，用于跳过完全相同的重复信息。
+                # 同名实体（如初始导入产生的多个「鸡蛋」节点）的 value_content 往往逐字相同，
+                # 旧实现会把每个副本整段追加，导致出现几十个重复的
+                # 「补充信息: 食材名称: 鸡蛋 / 类别: 蛋白质」块，污染检索上下文。
+                seen_lines = set(primary_entity.value_content.splitlines())
+
                 for entity_id in entity_ids[1:]:
                     duplicate_entity = self.entity_kv_store[entity_id]
-                    # 合并内容：将冗余实体的 value_content 追加到主实体中，避免信息丢失。
-                    primary_entity.value_content += f"\n\n补充信息: {duplicate_entity.value_content}"
-                    # 标记删除
+                    # 仅保留主实体中尚未出现的非空行（标题行「食材名称: ...」会因已存在被过滤），
+                    # 只有真正带来新信息（如不同的营养/储存字段）时才追加，避免噪声。
+                    new_lines = [
+                        line for line in duplicate_entity.value_content.splitlines()
+                        if line and line not in seen_lines
+                    ]
+                    if new_lines:
+                        supplement = "\n".join(new_lines)
+                        primary_entity.value_content += f"\n\n补充信息: {supplement}"
+                        seen_lines.update(new_lines)
+                    # 标记删除（即使无新信息也要移除冗余节点）
                     entities_to_remove.append(entity_id)
 
         # 删除重复实体

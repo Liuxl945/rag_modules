@@ -425,7 +425,7 @@ async def evaluation_single(req: EvaluationSampleIn):
 
     scores = {}
     if res.get("results"):
-        scores = {k: v for k, v in res["results"][0].items() if k != "question"}
+        scores = {k: v for k, v in res["results"][0].items() if k not in ("question", "answer", "contexts")}
     return {
         "scores": scores,
         "metrics": res.get("metrics", []),
@@ -476,7 +476,7 @@ async def evaluation_message(req: MessageEvaluationRequest):
 
     scores = {}
     if res.get("results"):
-        scores = {k: v for k, v in res["results"][0].items() if k != "question"}
+        scores = {k: v for k, v in res["results"][0].items() if k not in ("question", "answer", "contexts")}
     return {
         "question": question,
         "scores": scores,

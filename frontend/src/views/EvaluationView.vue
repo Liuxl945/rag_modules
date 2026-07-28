@@ -30,6 +30,7 @@ const METRIC_LABEL: Record<string, string> = {
   response_relevancy: '答案相关性',
   context_recall: '上下文召回率',
   context_precision: '上下文精确率',
+  llm_context_precision_with_reference: '上下文精确率',
   answer_relevancy: '答案相关性',
 }
 const METRIC_DESC: Record<string, string> = {
@@ -37,7 +38,8 @@ const METRIC_DESC: Record<string, string> = {
   response_relevancy: '答案是否切题（生成反推问题与原问题相似度）',
   context_recall: '参考答案是否都能被检索上下文覆盖',
   context_precision: '相关检索项是否排在前面（MRR 风格）',
-  answer_relevancy: '答案是否切题',
+  llm_context_precision_with_reference: '相关检索项是否排在前面（MRR 风格）',
+  answer_relevancy: '答案是否切题（生成反推问题与原问题相似度）',
 }
 function metricLabel(k: string): string {
   return METRIC_LABEL[k] || k
@@ -577,6 +579,26 @@ onMounted(() => {
           </el-col>
         </el-row>
         <el-table :data="detail.results" border size="small" style="width: 100%">
+          <el-table-column type="expand">
+            <template #default="{ row }">
+              <div class="expand-detail">
+                <div v-if="row.answer" class="expand-block">
+                  <div class="expand-label">生成答案</div>
+                  <div class="expand-text">{{ row.answer }}</div>
+                </div>
+                <div v-if="row.contexts && row.contexts.length" class="expand-block">
+                  <div class="expand-label">检索上下文（{{ row.contexts.length }} 条，用于排查 context 质量）</div>
+                  <div v-for="(c, i) in row.contexts" :key="i" class="expand-context">
+                    <span class="ctx-idx">#{{ i + 1 }}</span>
+                    <span class="ctx-text">{{ c }}</span>
+                  </div>
+                </div>
+                <div v-if="!row.answer && !(row.contexts && row.contexts.length)" class="muted">
+                  （该记录为旧版评估，未落盘 answer/contexts；重跑一次即可看到）
+                </div>
+              </div>
+            </template>
+          </el-table-column>
           <el-table-column type="index" label="#" width="50" />
           <el-table-column prop="question" label="问题" min-width="200" show-overflow-tooltip />
           <el-table-column
@@ -674,5 +696,42 @@ code {
   padding: 1px 6px;
   border-radius: 4px;
   font-family: 'SFMono-Regular', Consolas, monospace;
+}
+.expand-detail {
+  padding: 4px 12px 8px;
+}
+.expand-block {
+  margin-bottom: 12px;
+}
+.expand-label {
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+.expand-text {
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.expand-context {
+  display: flex;
+  gap: 6px;
+  font-size: 12px;
+  line-height: 1.6;
+  padding: 4px 0;
+  border-bottom: 1px dashed var(--el-border-color-lighter);
+}
+.expand-context:last-child {
+  border-bottom: none;
+}
+.ctx-idx {
+  color: var(--el-text-color-secondary);
+  flex-shrink: 0;
+}
+.ctx-text {
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 </style>

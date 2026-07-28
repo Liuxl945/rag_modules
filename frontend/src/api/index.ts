@@ -191,7 +191,7 @@ export async function runEvaluation(questions?: string[]): Promise<EvaluationRun
   const { data } = await http.post<EvaluationRunResult>(
     '/evaluation/run',
     { questions },
-    { timeout: 600000 }, // 10 分钟
+    { timeout: 900000 }, // 15 分钟：RAGAS 串行/低并发评估 + judge 重试，留足余量
   )
   return data
 }
