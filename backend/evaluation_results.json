@@ -1,0 +1,72 @@
+[
+  {
+    "id": "eval-1",
+    "created_at": 1785233010.246524,
+    "kind": "dataset",
+    "count": 8,
+    "metrics": [
+      "faithfulness",
+      "context_recall",
+      "answer_relevancy"
+    ],
+    "aggregates": {
+      "faithfulness": 0.2144,
+      "context_recall": 0.2083,
+      "answer_relevancy": 0.3584
+    },
+    "results": [
+      {
+        "question": "番茄炒蛋怎么做？请给出详细步骤。",
+        "faithfulness": 0.5556,
+        "context_recall": 1.0,
+        "answer_relevancy": 0.3584
+      },
+      {
+        "question": "如果没有淡奶油，可以用什么代替？",
+        "faithfulness": 0.0,
+        "context_recall": 0.0,
+        "answer_relevancy": null
+      },
+      {
+        "question": "有哪些菜同时用到了鸡蛋和番茄？",
+        "faithfulness": 0.225,
+        "context_recall": 0.0,
+        "answer_relevancy": null
+      },
+      {
+        "question": "有哪些适合新手做的家常菜？",
+        "faithfulness": 0.3333,
+        "context_recall": 0.0,
+        "answer_relevancy": null
+      },
+      {
+        "question": "红烧肉的具体做法是什么？",
+        "faithfulness": 0.2069,
+        "context_recall": 0.0,
+        "answer_relevancy": null
+      },
+      {
+        "question": "做蛋糕一般需要哪些材料？",
+        "faithfulness": 0.3947,
+        "context_recall": 0.6667,
+        "answer_relevancy": null
+      },
+      {
+        "question": "煮鸡蛋需要几分钟？不同时间有什么区别？",
+        "faithfulness": 0.0,
+        "context_recall": 0.0,
+        "answer_relevancy": null
+      },
+      {
+        "question": "做菜时如果没有黄油，可以用什么代替？",
+        "faithfulness": 0.0,
+        "context_recall": 0.0,
+        "answer_relevancy": null
+      }
+    ],
+    "elapsed": 407.73,
+    "extra": {
+      "skipped": 0
+    }
+  }
+]
