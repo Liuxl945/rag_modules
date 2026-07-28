@@ -227,7 +227,7 @@ onUnmounted(destroyNetwork)
       <div v-else-if="graph && !graph.nodes.length" class="kg-empty">
         <el-empty description="该菜谱暂无图谱数据" :image-size="80" />
       </div>
-      <div ref="containerRef" class="kg-canvas"></div>
+      <div v-if="selectedRid" ref="containerRef" class="kg-canvas"></div>
     </div>
   </el-dialog>
 </template>

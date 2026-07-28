@@ -555,6 +555,61 @@ class GraphDataPreparationModule:
 
         # 单事务写入所有节点和关系
         with self.driver.session() as session:
+            # 0. 清理同名的旧上传菜谱（重复上传时自动覆盖，避免残留坏数据）
+            def _cleanup_old(tx):
+                # 找到旧的同名上传菜谱，收集其 ID 用于清理步骤
+                old_recipe_ids = []
+                result = tx.run(
+                    """
+                    MATCH (r:Recipe {name: $name, source: 'markdown_upload'})
+                    WHERE r.nodeId <> $new_id
+                    RETURN r.nodeId AS old_id
+                    """,
+                    name=parsed.name,
+                    new_id=recipe_id,
+                )
+                for rec in result:
+                    old_recipe_ids.append(rec["old_id"])
+
+                if not old_recipe_ids:
+                    return 0
+
+                # 删除旧菜谱的所有 CookingStep 节点
+                for old_id in old_recipe_ids:
+                    tx.run(
+                        """
+                        MATCH (s:CookingStep)
+                        WHERE s.nodeId STARTS WITH $prefix
+                        DETACH DELETE s
+                        """,
+                        prefix=old_id + "_step_",
+                    )
+                    # 删除旧菜谱节点及其关系
+                    tx.run(
+                        """
+                        MATCH (r:Recipe {nodeId: $rid})
+                        OPTIONAL MATCH (r)-[rel]->(n:Ingredient)
+                        WHERE n.nodeId STARTS WITH 'ing_upload_'
+                        DETACH DELETE r, n
+                        """,
+                        rid=old_id,
+                    )
+
+                logger.info(f"清理了 {len(old_recipe_ids)} 个同名旧上传菜谱节点")
+                return old_recipe_ids
+
+            old_deleted_ids = session.execute_write(_cleanup_old)
+            if old_deleted_ids:
+                # 同步清理内存列表中的旧节点和文档
+                self.recipes = [r for r in self.recipes if not (r.name == parsed.name and r.properties.get("source") == "markdown_upload")]
+                # 清理旧的 upload_ 前缀食材和步骤
+                self.ingredients = [i for i in self.ingredients if not i.node_id.startswith("ing_upload_")]
+                self.cooking_steps = [s for s in self.cooking_steps if not (s.node_id.startswith("upload_") and "_step_" in s.node_id)]
+                # 清理旧的完整文档和 chunks
+                self.documents = [d for d in self.documents if d.metadata.get("source") != "markdown_upload" or d.metadata.get("recipe_name") != parsed.name]
+                self.chunks = [c for c in self.chunks if c.metadata.get("source") != "markdown_upload" or c.metadata.get("recipe_name") != parsed.name]
+                self.clear_documents_cache()
+
             def _write_tx(tx):
                 # 1. 创建 Recipe 节点
                 tx.run(
@@ -615,17 +670,19 @@ class GraphDataPreparationModule:
                         step_order=i,
                     )
 
-                # 4. REQUIRES 关系（含用量）
+                # 4. REQUIRES 关系（含用量）— 按 nodeId 精确匹配，避免 Neo4j 中同名多节点导致重复关系
                 for ing in parsed.ingredients:
                     nid = ing_name_to_id[ing.name]
                     am = amount_map.get(ing.name, {})
                     tx.run(
                         """
-                        MATCH (r:Recipe {nodeId: $recipe_id}), (i:Ingredient {name: $ing_name})
-                        CREATE (r)-[:REQUIRES {amount: $amount, unit: $unit}]->(i)
+                        MATCH (r:Recipe {nodeId: $recipe_id})
+                        MATCH (i:Ingredient {nodeId: $ing_id})
+                        MERGE (r)-[rel:REQUIRES]->(i)
+                        SET rel.amount = $amount, rel.unit = $unit
                         """,
                         recipe_id=recipe_id,
-                        ing_name=ing.name,
+                        ing_id=nid,
                         amount=am.get("amount") if am.get("amount") is not None else 0,
                         unit=am.get("unit") or "",
                     )
@@ -636,7 +693,7 @@ class GraphDataPreparationModule:
                     MERGE (c:Category {name: $cat_name})
                     WITH c
                     MATCH (r:Recipe {nodeId: $recipe_id})
-                    CREATE (r)-[:BELONGS_TO_CATEGORY]->(c)
+                    MERGE (r)-[:BELONGS_TO_CATEGORY]->(c)
                     """,
                     cat_name=category_name,
                     recipe_id=recipe_id,
@@ -694,6 +751,7 @@ class GraphDataPreparationModule:
             "ingredients_reused": ingredients_reused,
             "steps_count": len(parsed.steps),
             "ingredient_ids": ing_name_to_id,  # name -> node_id 映射，供后续图索引使用
+            "old_deleted_ids": old_deleted_ids,  # 被覆盖的旧 upload_ recipe id 列表
         }
 
     def chunk_documents(self, chunk_size: int = 500, chunk_overlap: int = 50) -> List[Document]:

@@ -512,9 +512,16 @@ class AdvancedGraphRAGSystem:
         parsed = parse_markdown_recipe(content)
         logger.info(f"解析完成: 菜名='{parsed.name}', 食材{len(parsed.ingredients)}个, 步骤{len(parsed.steps)}个")
 
-        # 2. 写入 Neo4j + 更新内存节点列表
+        # 2. 写入 Neo4j + 更新内存节点列表（含旧数据清理）
         ingest_result = self.data_module.ingest_markdown_recipe(parsed)
         recipe_id = ingest_result["recipe_id"]
+
+        # 2.5 清理 Milvus 中旧上传菜谱的向量（覆盖上传场景）
+        for old_id in ingest_result.get("old_deleted_ids", []):
+            try:
+                self.index_module.delete_by_node_id_prefix(old_id)
+            except Exception as e:
+                logger.warning(f"清理 Milvus 旧向量失败 ({old_id}): {e}")
 
         # 3. 构建 LangChain Document（与 build_recipe_documents 格式一致）
         content_parts = [f"# {parsed.name}"]

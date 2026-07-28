@@ -526,6 +526,28 @@ class MilvusIndexConstructionModule:
             logger.error(f"检查集合存在性失败: {e}")
             return False
 
+    def delete_by_node_id_prefix(self, node_id_prefix: str) -> bool:
+        """按 node_id 前缀删除向量记录（用于覆盖上传时清理旧数据）。
+
+        Args:
+            node_id_prefix: node_id 前缀（如 "upload_xxx" 对应被覆盖的菜谱）
+
+        Returns:
+            True → 成功（含无匹配记录的情况）；False → 异常
+        """
+        if not self.collection_created:
+            return True
+        try:
+            self.client.delete(
+                collection_name=self.collection_name,
+                filter=f'node_id like "{node_id_prefix}%"',
+            )
+            logger.info(f"已从 Milvus 删除 node_id 前缀为 '{node_id_prefix}' 的记录")
+            return True
+        except Exception as e:
+            logger.error(f"按前缀删除 Milvus 记录失败: {e}")
+            return False
+
     def load_collection(self) -> bool:
         """将集合加载到内存（使索引可用，方可执行搜索）。
 
