@@ -1,4 +1,4 @@
-import type { AnalysisInfo, SourceDoc } from '@/types'
+import type { AnalysisInfo, SourceDoc, RetrievalTrace } from '@/types'
 
 /**
  * SSE 流式问答客户端
@@ -7,14 +7,14 @@ import type { AnalysisInfo, SourceDoc } from '@/types'
  * 因此用 fetch + ReadableStream 手动解析 text/event-stream。
  *
  * 事件序列（与后端 backend/api/routes.py 一致）：
- *   analysis -> { analysis, sources }   路由检索完成
+ *   analysis -> { analysis, sources, retrieval_trace }   路由检索完成
  *   chunk    -> { content }             逐 token（0..N 次）
  *   done     -> { elapsed?, answer? }   正常结束
  *   error    -> { message }             出错
  */
 
 export interface StreamHandlers {
-  onAnalysis?: (data: { analysis: AnalysisInfo; sources: SourceDoc[] }) => void
+  onAnalysis?: (data: { analysis: AnalysisInfo; sources: SourceDoc[]; retrieval_trace?: RetrievalTrace | null }) => void
   onChunk?: (data: { content: string }) => void
   onDone?: (data: { elapsed?: number; answer?: string }) => void
   onError?: (data: { message: string }) => void

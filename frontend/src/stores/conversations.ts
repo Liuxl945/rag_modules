@@ -47,6 +47,7 @@ export const useConversationStore = defineStore('conversations', () => {
       content: m.content || '',
       analysis: m.analysis,
       sources: m.sources,
+      retrieval_trace: m.retrieval_trace,
       elapsed: m.elapsed,
       streaming: false,
       error: m.error || false,
@@ -81,6 +82,7 @@ export const useConversationStore = defineStore('conversations', () => {
       content: msg.content,
       analysis: msg.analysis,
       sources: msg.sources,
+      retrieval_trace: msg.retrieval_trace,
       elapsed: msg.elapsed,
       error: msg.error || false,
       timestamp: Date.now() / 1000,
@@ -200,9 +202,10 @@ export const useConversationStore = defineStore('conversations', () => {
       q,
       null,
       {
-        onAnalysis: ({ analysis, sources }) => {
+        onAnalysis: ({ analysis, sources, retrieval_trace }) => {
           assistantMsg.analysis = analysis
           assistantMsg.sources = sources
+          assistantMsg.retrieval_trace = retrieval_trace ?? null
         },
         onChunk: ({ content }) => {
           assistantMsg.content += content

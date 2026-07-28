@@ -4,11 +4,21 @@ import type { ChatMessage } from '@/types'
 import { renderMarkdown } from '@/utils/markdown'
 import AnalysisTag from './AnalysisTag.vue'
 import SourceList from './SourceList.vue'
+import RetrievalTracePanel from './RetrievalTracePanel.vue'
 
 const props = defineProps<{ message: ChatMessage }>()
 
 const isUser = computed(() => props.message.role === 'user')
 const htmlContent = computed(() => renderMarkdown(props.message.content))
+
+// 是否有检索过程轨迹可展示（图推理路径或三路召回统计）
+const hasTrace = computed(
+  () =>
+    !!props.message.retrieval_trace &&
+    (!!props.message.retrieval_trace.graph_query_plan ||
+      !!props.message.retrieval_trace.graph_paths?.length ||
+      !!props.message.retrieval_trace.channel_stats),
+)
 </script>
 
 <template>
@@ -23,9 +33,10 @@ const htmlContent = computed(() => renderMarkdown(props.message.content))
         <span v-if="message.streaming && message.content" class="cursor">▋</span>
       </div>
 
-      <!-- 路由分析 + 检索来源（仅助手消息） -->
+      <!-- 路由分析 + 检索过程 + 检索来源（仅助手消息） -->
       <template v-if="!isUser">
         <AnalysisTag v-if="message.analysis" :analysis="message.analysis" class="meta" />
+        <RetrievalTracePanel v-if="hasTrace" :trace="message.retrieval_trace!" />
         <SourceList v-if="message.sources && message.sources.length" :sources="message.sources" />
         <div v-if="message.elapsed != null && !message.streaming" class="elapsed">
           耗时 {{ message.elapsed.toFixed(2) }} 秒

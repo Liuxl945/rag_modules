@@ -152,6 +152,12 @@ class GraphRAGRetrieval:
         self.relation_cache = {}    # rel_type -> frequency
         self.subgraph_cache = {}    # 预留：子图缓存（当前未使用）
 
+        # 最近一次图查询规划（dict | None）。
+        # graph_rag_search 中由 understand_graph_query 的结果填充，供 Web API
+        # 透传到前端展示「走了哪些关系、多少跳、源/目标实体」。
+        # 每次进入 graph_rag_search 先置 None，保证非图查询不会读到陈旧值。
+        self.last_query_plan = None
+
     def initialize(self):
         """初始化图 RAG 检索系统：连接 Neo4j + 预热图索引。
 
@@ -656,9 +662,21 @@ class GraphRAGRetrieval:
             logger.warning("Neo4j连接未建立，返回空结果")
             return []
 
+        # 每次进入先清空，保证非图查询/失败时不会读到上一次的陈旧规划
+        self.last_query_plan = None
+
         # 1. 查询意图理解：将自然语言转换为 GraphQuery
         graph_query = self.understand_graph_query(query)
         logger.info(f"查询类型: {graph_query.query_type.value}")
+
+        # 缓存查询规划（供 Web API 透传到前端展示推理路径意图）
+        self.last_query_plan = {
+            "query_type": graph_query.query_type.value,
+            "source_entities": list(graph_query.source_entities or []),
+            "target_entities": list(graph_query.target_entities or []),
+            "relation_types": list(graph_query.relation_types or []),
+            "max_depth": graph_query.max_depth,
+        }
 
         results = []
 
@@ -749,7 +767,11 @@ class GraphRAGRetrieval:
         try:
             central_nodes = [dict(record["source"])]           # 核心实体（source 节点）
             connected_nodes = [dict(node) for node in record["nodes"]]  # 连通节点列表
-            relationships = [dict(rel) for rel in record["rels"]]      # 关系列表
+            # 保留关系类型（dict(rel) 只含属性，不含 type），供前端可视化展示走了哪些关系
+            relationships = [
+                {"type": rel.type, "properties": dict(rel)}
+                for rel in record["rels"]
+            ]      # 关系列表
 
             return KnowledgeSubgraph(
                 central_nodes=central_nodes,
@@ -787,6 +809,16 @@ class GraphRAGRetrieval:
             # 构建路径的自然语言描述（"节点A --关系--> 节点B --关系--> 节点C"）
             path_desc = self._build_path_description(path)
 
+            # 保留结构化路径（供前端可视化推理路径：节点链 + 关系 + 跳数）
+            # 只取 name/labels 与 type，剔除大体积 properties，控制 payload 大小。
+            structured_nodes = [
+                {"name": n.get("name", ""), "labels": list(n.get("labels", []))}
+                for n in path.nodes
+            ]
+            structured_rels = [
+                {"type": r.get("type", "")} for r in path.relationships
+            ]
+
             doc = Document(
                 page_content=path_desc,
                 metadata={
@@ -796,6 +828,8 @@ class GraphRAGRetrieval:
                     "path_type": path.path_type,           # 路径类型标记
                     "node_count": len(path.nodes),         # 路径上的节点数
                     "relationship_count": len(path.relationships),  # 路径上的关系数
+                    "path_nodes": structured_nodes,        # 结构化节点链（可视化用）
+                    "path_relationships": structured_rels,  # 结构化关系链（可视化用）
                     "recipe_name": path.nodes[0].get("name", "图结构结果") if path.nodes else "图结构结果"  # 首节点名作为 recipe_name
                 }
             )
@@ -823,6 +857,15 @@ class GraphRAGRetrieval:
         # 构建子图整体的自然语言描述
         subgraph_desc = self._build_subgraph_description(subgraph)
 
+        # 保留结构化子图（供前端可视化：连通节点名 + 关系类型 + 密度 + 推理链）
+        connected_names = [
+            n.get("name", "") for n in subgraph.connected_nodes if n.get("name")
+        ]
+        subgraph_rels = [
+            {"type": r.get("type", r.get("relation_type", ""))}
+            for r in subgraph.relationships
+        ]
+
         doc = Document(
             page_content=subgraph_desc,
             metadata={
@@ -831,6 +874,8 @@ class GraphRAGRetrieval:
                 "relationship_count": len(subgraph.relationships),  # 关系数
                 "graph_density": subgraph.graph_metrics.get("density", 0.0),  # 图谱密度
                 "reasoning_chains": reasoning_chains,             # 推理链列表
+                "path_nodes": [{"name": n} for n in connected_names],  # 复用 path_nodes 字段存连通节点（可视化统一处理）
+                "path_relationships": subgraph_rels,              # 复用字段存子图关系
                 "recipe_name": subgraph.central_nodes[0].get("name", "知识子图") if subgraph.central_nodes else "知识子图"  # 核心实体名
             }
         )

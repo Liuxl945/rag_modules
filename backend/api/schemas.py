@@ -2,7 +2,7 @@
 Pydantic 请求/响应模型 - 定义前后端数据契约
 """
 
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
 from pydantic import BaseModel, Field
 
@@ -15,12 +15,32 @@ class QueryRequest(BaseModel):
 
 
 class SourceDoc(BaseModel):
-    """检索来源摘要"""
+    """检索来源摘要（含 chunk 元信息与各通道得分，供前端可视化）"""
 
+    # 基础信息
     recipe_name: str
     search_type: str
+    search_method: Optional[str] = None
     score: float
+    final_score: Optional[float] = None
     content_preview: str
+    # chunk / 文档定位
+    node_id: Optional[str] = None
+    chunk_id: Optional[str] = None
+    chunk_index: Optional[int] = None
+    total_chunks: Optional[int] = None
+    section_title: Optional[str] = None
+    # 各检索通道命中情况与得分对比
+    rrf_sources: Optional[List[str]] = None
+    rrf_ranks: Optional[Dict[str, int]] = None
+    rrf_raw_scores: Optional[Dict[str, float]] = None
+    bm25_score: Optional[float] = None
+    vector_score: Optional[float] = None
+    dual_score: Optional[float] = None
+    # 图 RAG 路径元信息
+    path_length: Optional[int] = None
+    node_count: Optional[int] = None
+    relationship_count: Optional[int] = None
 
 
 class AnalysisInfo(BaseModel):
@@ -35,6 +55,61 @@ class AnalysisInfo(BaseModel):
     reasoning: str
 
 
+class GraphQueryPlan(BaseModel):
+    """图 RAG 查询规划（走了哪些实体/关系、最大跳数）"""
+
+    query_type: str
+    source_entities: List[str] = []
+    target_entities: List[str] = []
+    relation_types: List[str] = []
+    max_depth: int = 2
+
+
+class GraphPathNode(BaseModel):
+    """图路径上的节点"""
+
+    name: str = ""
+    labels: Optional[List[str]] = None
+
+
+class GraphPathRel(BaseModel):
+    """图路径上的关系"""
+
+    type: str = ""
+
+
+class GraphPath(BaseModel):
+    """图推理路径（节点链 + 关系链 + 跳数 + 相关性分）"""
+
+    type: str  # graph_path | knowledge_subgraph
+    recipe_name: str
+    path_length: Optional[int] = None
+    relevance_score: Optional[float] = None
+    nodes: List[GraphPathNode] = []
+    relationships: List[GraphPathRel] = []
+    node_count: Optional[int] = None
+    relationship_count: Optional[int] = None
+    graph_density: Optional[float] = None
+    reasoning_chains: List[str] = []
+
+
+class ChannelStats(BaseModel):
+    """三路召回（dual_level / vector / bm25）统计"""
+
+    candidates: Dict[str, int] = {}     # 各路候选数（融合前）
+    final: int = 0                       # 融合后入选数
+    channels: List[str] = []             # 通道顺序
+    contributed: Dict[str, int] = {}     # 各通道在最终结果中的入选数
+
+
+class RetrievalTrace(BaseModel):
+    """检索过程轨迹：为什么推荐这些结果"""
+
+    graph_query_plan: Optional[GraphQueryPlan] = None
+    graph_paths: List[GraphPath] = []
+    channel_stats: Optional[ChannelStats] = None
+
+
 class QueryResponse(BaseModel):
     """非流式问答响应"""
 
@@ -42,6 +117,7 @@ class QueryResponse(BaseModel):
     analysis: AnalysisInfo
     sources: List[SourceDoc]
     elapsed: float
+    retrieval_trace: Optional[RetrievalTrace] = None
 
 
 class HealthResponse(BaseModel):
@@ -96,6 +172,7 @@ class MessageCreateRequest(BaseModel):
     content: str = Field(..., description="消息内容")
     analysis: Optional[dict] = None
     sources: Optional[List[dict]] = None
+    retrieval_trace: Optional[dict] = None
     elapsed: Optional[float] = None
     error: Optional[bool] = False
     timestamp: Optional[float] = None

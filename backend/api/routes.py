@@ -24,6 +24,7 @@ from .schemas import (
     QueryResponse,
     AnalysisInfo,
     SourceDoc,
+    RetrievalTrace,
     HealthResponse,
     RebuildResponse,
     UploadRecipeResponse,
@@ -183,6 +184,7 @@ async def query(req: QueryRequest):
         )
         analysis_dict = system.analysis_to_dict(analysis)
         sources = system.sources_from_documents(documents)
+        trace = system.retrieval_trace_from_documents(documents, analysis)
 
         if not documents:
             return QueryResponse(
@@ -190,6 +192,7 @@ async def query(req: QueryRequest):
                 analysis=AnalysisInfo(**analysis_dict),
                 sources=[SourceDoc(**s) for s in sources],
                 elapsed=time.time() - start,
+                retrieval_trace=RetrievalTrace(**trace) if trace else None,
             )
 
         # 一次性生成完整答案（阻塞，放线程池）
@@ -202,6 +205,7 @@ async def query(req: QueryRequest):
             analysis=AnalysisInfo(**analysis_dict),
             sources=[SourceDoc(**s) for s in sources],
             elapsed=time.time() - start,
+            retrieval_trace=RetrievalTrace(**trace) if trace else None,
         )
     except ValueError as e:
         raise HTTPException(status_code=503, detail=str(e))
@@ -236,12 +240,14 @@ async def query_stream(req: QueryRequest):
             documents, analysis = await asyncio.to_thread(
                 system.retrieve, question, top_k
             )
+            trace = system.retrieval_trace_from_documents(documents, analysis)
             yield {
                 "event": "analysis",
                 "data": json.dumps(
                     {
                         "analysis": system.analysis_to_dict(analysis),
                         "sources": system.sources_from_documents(documents),
+                        "retrieval_trace": trace,
                     },
                     ensure_ascii=False,
                 ),
@@ -340,6 +346,7 @@ async def append_message(conv_id: str, req: MessageCreateRequest):
         content=req.content,
         analysis=req.analysis,
         sources=req.sources,
+        retrieval_trace=req.retrieval_trace,
         elapsed=req.elapsed,
         error=req.error,
         timestamp=req.timestamp,

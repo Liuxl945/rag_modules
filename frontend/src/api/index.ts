@@ -112,6 +112,7 @@ export async function appendMessage(
     content: string
     analysis?: any
     sources?: any
+    retrieval_trace?: any
     elapsed?: number
     error?: boolean
     timestamp?: number

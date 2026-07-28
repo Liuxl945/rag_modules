@@ -429,16 +429,104 @@ class AdvancedGraphRAGSystem:
 
     @staticmethod
     def sources_from_documents(documents: List) -> List[dict]:
-        """从检索结果 Document 列表提取来源摘要信息。"""
+        """从检索结果 Document 列表提取来源摘要信息（含 chunk 元信息与各通道得分，供前端可视化）。"""
         sources = []
         for doc in documents:
+            md = doc.metadata
             sources.append({
-                "recipe_name": doc.metadata.get('recipe_name', '未知内容'),
-                "search_type": doc.metadata.get('search_type', doc.metadata.get('route_strategy', 'unknown')),
-                "score": float(doc.metadata.get('final_score', doc.metadata.get('relevance_score', 0))),
-                "content_preview": doc.page_content.strip()[:200],
+                # 基础信息
+                "recipe_name": md.get('recipe_name', '未知内容'),
+                "search_type": md.get('search_type', md.get('route_strategy', 'unknown')),
+                "search_method": md.get('search_method', md.get('search_type', 'unknown')),
+                "score": float(md.get('final_score', md.get('relevance_score', 0))),
+                "final_score": float(md.get('final_score', md.get('relevance_score', 0))) if md.get('final_score') is not None or md.get('relevance_score') is not None else None,
+                "content_preview": doc.page_content.strip()[:300],
+                # chunk / 文档定位（哪些 chunk 被检索到）
+                "node_id": md.get('node_id'),
+                "chunk_id": md.get('chunk_id'),
+                "chunk_index": md.get('chunk_index'),
+                "total_chunks": md.get('total_chunks'),
+                "section_title": md.get('section_title'),
+                # 各检索通道命中情况与得分对比
+                "rrf_sources": md.get('rrf_sources'),
+                "rrf_ranks": md.get('rrf_ranks'),
+                "rrf_raw_scores": md.get('rrf_raw_scores'),
+                "bm25_score": md.get('bm25_score'),
+                "vector_score": md.get('score') if md.get('search_method') == 'vector' or 'rrf_sources' in md else None,
+                "dual_score": md.get('relevance_score') if md.get('search_method') == 'dual_level' else None,
+                # 图 RAG 路径元信息
+                "path_length": md.get('path_length'),
+                "node_count": md.get('node_count'),
+                "relationship_count": md.get('relationship_count'),
             })
         return sources
+
+    def retrieval_trace_from_documents(self, documents: List, analysis) -> dict:
+        """从检索结果构建「检索过程轨迹」，供前端展示为什么推荐这些结果。
+
+        包含三部分（按策略自适应，缺失部分为 None / []）：
+            - graph_query_plan: 图 RAG 查询规划（query_type / 源实体 / 目标实体 / 关系类型 / 最大跳数）
+            - graph_paths: 图推理路径列表（节点链 + 关系链 + 跳数 + 相关性分），来自 graph_path / knowledge_subgraph 文档
+            - channel_stats: 三路召回（dual_level / vector / bm25）候选与入选统计（仅混合检索有）
+
+        Args:
+            documents: 检索结果 Document 列表
+            analysis: QueryAnalysis 对象（用于按策略决定读取哪部分，避免读到陈旧侧状态）
+
+        Returns:
+            {graph_query_plan, graph_paths, channel_stats}
+        """
+        strategy = analysis.recommended_strategy.value if analysis else None
+
+        # ---- 图 RAG 部分：graph_rag / combined 时才有意义 ----
+        graph_query_plan = None
+        graph_paths: List[dict] = []
+        if strategy in ("graph_rag", "combined") and self.graph_rag_retrieval is not None:
+            graph_query_plan = getattr(self.graph_rag_retrieval, "last_query_plan", None)
+
+        for doc in documents:
+            md = doc.metadata
+            st = md.get("search_type")
+            if st not in ("graph_path", "knowledge_subgraph"):
+                continue
+            nodes = md.get("path_nodes") or []
+            rels = md.get("path_relationships") or []
+            graph_paths.append({
+                "type": st,
+                "recipe_name": md.get("recipe_name", "图结构结果"),
+                "path_length": md.get("path_length"),
+                "relevance_score": float(md["relevance_score"]) if md.get("relevance_score") is not None else None,
+                "nodes": nodes,
+                "relationships": rels,
+                "node_count": md.get("node_count", len(nodes)),
+                "relationship_count": md.get("relationship_count", len(rels)),
+                "graph_density": md.get("graph_density"),
+                "reasoning_chains": md.get("reasoning_chains") or [],
+            })
+
+        # ---- 通道统计部分：hybrid_traditional / combined 时才有意义 ----
+        channel_stats = None
+        if strategy in ("hybrid_traditional", "combined") and self.traditional_retrieval is not None:
+            stats = getattr(self.traditional_retrieval, "last_hybrid_stats", None)
+            if stats:
+                # 统计最终结果中各通道实际入选数（按 rrf_sources 标记）
+                contributed = {ch: 0 for ch in stats.get("channels", [])}
+                for doc in documents:
+                    for ch in (doc.metadata.get("rrf_sources") or []):
+                        if ch in contributed:
+                            contributed[ch] += 1
+                channel_stats = {
+                    "candidates": stats.get("candidates", {}),
+                    "final": stats.get("final", len(documents)),
+                    "channels": stats.get("channels", []),
+                    "contributed": contributed,
+                }
+
+        return {
+            "graph_query_plan": graph_query_plan,
+            "graph_paths": graph_paths,
+            "channel_stats": channel_stats,
+        }
 
     def get_system_stats(self) -> dict:
         """返回系统运行统计（路由占比 + 知识库统计 + Milvus 统计 + 就绪标记）。

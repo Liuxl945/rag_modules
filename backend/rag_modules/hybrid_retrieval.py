@@ -109,6 +109,17 @@ class HybridRetrievalModule:
         self.graph_indexing = GraphIndexingModule(config, llm_client)
         self.graph_indexed = False
 
+        # 最近一次 hybrid_search 的通道统计（dict | None），供 Web API 透传到前端
+        # 展示三路召回贡献：candidates=各路候选数，final=融合后入选数。
+        self.last_hybrid_stats = None
+
+    # 各检索通道原始分数在 Document.metadata 中的字段名（用于 RRF 时保留每源原始分）
+    _CHANNEL_SCORE_KEY = {
+        "dual_level": "relevance_score",  # 双层检索规则分（0.75-0.95）
+        "vector": "score",                # Milvus 余弦相似度（0-1）
+        "bm25": "bm25_score",             # BM25 TF-IDF 分（无界，>0）
+    }
+
     def initialize(self, chunks: List[Document]):
         """初始化检索系统：BM25 建索引 + 图索引构建。
 
@@ -921,6 +932,8 @@ class HybridRetrievalModule:
         # doc_id → source_name → 该 source 内命中的 chunk 次数（信息存档）
         chunk_hits_per_source: Dict[str, Dict[str, int]] = {}
         # doc_id → (global_best_rank, source_priority, doc) — 选 canonical doc
+        # doc_id → source_name → 该 source 命中时的原始分数（供前端分数对比）
+        raw_scores_per_source: Dict[str, Dict[str, float]] = {}
         best_doc_info: Dict[str, Tuple[int, int, Document]] = {}
 
         for source_priority, (source_name, ranked_docs) in enumerate(ranked_lists):
@@ -935,11 +948,22 @@ class HybridRetrievalModule:
                 if doc_id not in best_rank_per_source:
                     best_rank_per_source[doc_id] = {}
                     chunk_hits_per_source[doc_id] = {}
+                    raw_scores_per_source[doc_id] = {}
 
                 curr_best = best_rank_per_source[doc_id].get(source_name)
                 # 如果是第一次出现，或者当前 rank 比记录的更小（更靠前），则更新。
-                if curr_best is None or rank < curr_best:
+                is_best = curr_best is None or rank < curr_best
+                if is_best:
                     best_rank_per_source[doc_id][source_name] = rank
+                    # 同时记录该通道命中时的原始分数（与最佳 rank 同一份 doc 对应）
+                    score_key = HybridRetrievalModule._CHANNEL_SCORE_KEY.get(source_name)
+                    if score_key:
+                        raw = doc.metadata.get(score_key)
+                        if raw is not None:
+                            try:
+                                raw_scores_per_source[doc_id][source_name] = float(raw)
+                            except (TypeError, ValueError):
+                                pass
 
                 # 记录该 source 内命中 chunk 的次数（用于后续分析）
                 chunk_hits_per_source[doc_id][source_name] = (
@@ -974,6 +998,7 @@ class HybridRetrievalModule:
             new_metadata["rrf_score"] = rrf_scores[doc_id]       # 融合后分数
             new_metadata["rrf_sources"] = list(best_rank_per_source[doc_id].keys())  # 被哪些路召回
             new_metadata["rrf_ranks"] = dict(best_rank_per_source[doc_id])  # 每路最佳 rank
+            new_metadata["rrf_raw_scores"] = dict(raw_scores_per_source[doc_id])  # 每路原始分（分数对比用）
             new_metadata["rrf_chunk_hits"] = dict(chunk_hits_per_source[doc_id])  # 每路命中 chunk 次数
             new_metadata["final_score"] = rrf_scores[doc_id]      # 最终综合分数
             merged.append(Document(
@@ -1253,6 +1278,17 @@ class HybridRetrievalModule:
         # 父文档回填（可选启用，仅 hybrid_traditional 路；不改排名，仅换上下文内容）
         if getattr(self.config, "enable_parent_doc_retrieval", False):
             final_docs = self._attach_parent_documents(final_docs)
+
+        # 缓存通道统计（供 Web API 透传到前端展示三路召回贡献）
+        self.last_hybrid_stats = {
+            "candidates": {
+                "dual_level": len(dual_docs),
+                "vector": len(vector_docs),
+                "bm25": len(bm25_docs),
+            },
+            "final": len(final_docs),
+            "channels": ["dual_level", "vector", "bm25"],
+        }
 
         logger.info(
             f"RRF 融合完成：dual={len(dual_docs)} vector={len(vector_docs)} "
