@@ -478,6 +478,18 @@ class AdvancedGraphRAGSystem:
             raise ValueError("系统未就绪，请先构建知识库")
         return self.data_module.get_single_recipe_graph(recipe_id)
 
+    def get_recipe_document(self, recipe_id: str) -> dict:
+        """返回指定菜谱的完整文档内容（page_content + metadata），供前端文档详情展示。"""
+        if not self.system_ready:
+            raise ValueError("系统未就绪，请先构建知识库")
+        for doc in self.data_module.documents:
+            if doc.metadata.get("node_id") == recipe_id:
+                return {
+                    "content": doc.page_content,
+                    "metadata": doc.metadata,
+                }
+        raise ValueError(f"未找到菜谱文档: {recipe_id}")
+
     def rebuild_knowledge_base(self) -> dict:
         """重建知识库（删除现有向量数据并重新构建），无确认 prompt。
 

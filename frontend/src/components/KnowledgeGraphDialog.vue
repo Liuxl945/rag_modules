@@ -78,7 +78,7 @@ function buildTooltip(n: KnowledgeNode): HTMLElement {
   wrap.appendChild(titleEl)
   wrap.appendChild(document.createElement('br'))
   const typeEl = document.createElement('span')
-  typeEl.style.cssText = 'color:#909399;font-size:11px'
+  typeEl.style.cssText = 'color:#909399;font-size:11px;white-space: pre-wrap;'
   typeEl.textContent = typeLabel[n.type] || n.type
   wrap.appendChild(typeEl)
   if (n.properties) {
@@ -86,7 +86,7 @@ function buildTooltip(n: KnowledgeNode): HTMLElement {
       if (v == null || v === '') continue
       wrap.appendChild(document.createElement('br'))
       const span = document.createElement('span')
-      span.style.cssText = 'color:#606266'
+      span.style.cssText = 'color:#606266;white-space: pre-wrap;'
       span.textContent = `${PROP_LABELS[k] || k}: ${v}`
       wrap.appendChild(span)
     }
@@ -107,6 +107,7 @@ async function loadAndRender(rid: string) {
   graph.value = null
   try {
     const g = await getRecipeGraph(rid)
+    console.log(g)
     graph.value = g
 
     // 保证 dialog 内容已渲染完毕、containerRef 可用

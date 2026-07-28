@@ -102,6 +102,16 @@ async def recipe_graph(recipe_id: str):
         raise HTTPException(status_code=404, detail=str(e))
 
 
+@router.get("/recipe-document/{recipe_id}")
+async def recipe_document(recipe_id: str):
+    """返回指定菜谱的完整文档内容（markdown 文本 + 元数据），供前端文档详情展示。"""
+    system = _require_system()
+    try:
+        return await asyncio.to_thread(system.get_recipe_document, recipe_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
 # ---------------------------------------------------------------------------
 # 非流式问答
 # ---------------------------------------------------------------------------

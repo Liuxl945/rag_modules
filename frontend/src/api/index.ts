@@ -9,6 +9,7 @@ import type {
   ChatMessage,
   KnowledgeGraph,
   RecipeName,
+  RecipeDocument,
 } from '@/types'
 
 const http = axios.create({
@@ -38,6 +39,14 @@ export async function listRecipeNames(): Promise<RecipeName[]> {
 export async function getRecipeGraph(recipeId: string): Promise<KnowledgeGraph> {
   const { data } = await http.get<KnowledgeGraph>(
     `/knowledge-graph/recipe/${encodeURIComponent(recipeId)}`,
+  )
+  return data
+}
+
+/** 获取指定菜谱的完整文档内容（markdown 文本 + 元数据） */
+export async function getRecipeDocument(recipeId: string): Promise<RecipeDocument> {
+  const { data } = await http.get<RecipeDocument>(
+    `/recipe-document/${encodeURIComponent(recipeId)}`,
   )
   return data
 }

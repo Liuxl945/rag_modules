@@ -4,6 +4,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { getStats, rebuildKnowledgeBase } from '@/api'
 import type { SystemStats } from '@/types'
 import KnowledgeGraphDialog from '@/components/KnowledgeGraphDialog.vue'
+import RecipeDocumentDialog from '@/components/RecipeDocumentDialog.vue'
 
 const stats = ref<SystemStats | null>(null)
 const loading = ref(false)
@@ -11,6 +12,8 @@ const rebuilding = ref(false)
 
 // 菜谱知识图谱弹窗
 const graphVisible = ref(false)
+// 菜谱文档详情弹窗
+const docVisible = ref(false)
 
 async function refresh() {
   loading.value = true
@@ -50,17 +53,23 @@ async function rebuild() {
   }
 }
 
-// 知识库计数卡片（仅菜谱可点击查看知识图谱）
+// 知识库计数卡片
 const kbCounts = computed(() => {
   const kb = stats.value?.knowledge_base || {}
   return [
-    { label: '菜谱', value: (kb.total_recipes as number) ?? 0, isClickable: true },
+    { label: '文档', value: (kb.total_documents as number) ?? 0, isClickable: true, clickTarget: 'document' as const },
+    { label: '菜谱', value: (kb.total_recipes as number) ?? 0, isClickable: true, clickTarget: 'graph' as const },
     { label: '食材', value: (kb.total_ingredients as number) ?? 0 },
     { label: '烹饪步骤', value: (kb.total_cooking_steps as number) ?? 0 },
-    { label: '文档', value: (kb.total_documents as number) ?? 0 },
     { label: '文本块', value: (kb.total_chunks as number) ?? 0 },
   ]
 })
+
+function onCardClick(item: { isClickable?: boolean; clickTarget?: 'graph' | 'document' }) {
+  if (!item.isClickable) return
+  if (item.clickTarget === 'graph') graphVisible.value = true
+  else if (item.clickTarget === 'document') docVisible.value = true
+}
 
 const vectorCount = computed(() => (stats.value?.milvus?.row_count as number) ?? 0)
 
@@ -106,10 +115,12 @@ onMounted(refresh)
           <div
             class="stat-card"
             :class="{ clickable: item.isClickable }"
-            @click="item.isClickable && (graphVisible = true)"
+            @click="onCardClick(item)"
           >
             <el-statistic :title="item.label" :value="item.value" />
-            <div v-if="item.isClickable" class="card-hint">🔗 查看知识图谱</div>
+            <div v-if="item.isClickable" class="card-hint">
+              {{ item.clickTarget === 'graph' ? '🔗 查看知识图谱' : '📄 查看文档详情' }}
+            </div>
           </div>
         </el-col>
       </el-row>
@@ -138,6 +149,8 @@ onMounted(refresh)
 
     <!-- 菜谱知识图谱弹窗 -->
     <KnowledgeGraphDialog v-model="graphVisible" />
+    <!-- 菜谱文档详情弹窗 -->
+    <RecipeDocumentDialog v-model="docVisible" />
   </div>
 </template>
 

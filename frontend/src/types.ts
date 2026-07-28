@@ -112,3 +112,9 @@ export interface RecipeName {
   name: string
   category: string
 }
+
+/** 菜谱文档详情（完整文档内容 + 元数据） */
+export interface RecipeDocument {
+  content: string
+  metadata: Record<string, any>
+}

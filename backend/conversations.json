@@ -149,5 +149,72 @@
         "timestamp": 1785160971.593
       }
     ]
+  },
+  {
+    "id": "conv-3",
+    "title": "川菜有哪些特色菜？",
+    "created_at": 1785202501.9904623,
+    "updated_at": 1785202511.969,
+    "messages": [
+      {
+        "id": "msg-7",
+        "role": "user",
+        "content": "川菜有哪些特色菜？",
+        "analysis": null,
+        "sources": null,
+        "elapsed": null,
+        "error": false,
+        "timestamp": 1785202501.995
+      },
+      {
+        "id": "msg-8",
+        "role": "assistant",
+        "content": "根据检索到的信息，以下是一些川菜特色菜，供您参考：\n\n1. **麻婆豆腐**  \n   - 分类：荤菜  \n   - 难度：3.0星  \n   - 标签：麻辣鲜香，川菜经典\n\n2. **酸辣土豆丝**  \n   - 分类：素菜  \n   - 难度：2.0星  \n   - 准备时间：10分钟，烹饪时间：5分钟  \n   - 份量：1人份\n\n3. **凉粉**  \n   - 分类：未明确标注（通常为素菜）  \n   - 难度：3.0星  \n   - 准备时间：5分钟，烹饪时间：10分钟  \n   - 份量：1人份  \n   - 标签：麻辣鲜香，川菜经典\n\n4. **回锅肉**  \n   - 分类：荤菜  \n   - 难度：4.0星\n\n以上菜品均属于川菜，各有特色。如果您对某道菜的具体制作方法感兴趣，我可以为您详细说明。",
+        "analysis": {
+          "recommended_strategy": "hybrid_traditional",
+          "query_complexity": 0.5,
+          "relationship_intensity": 0.3,
+          "reasoning_required": false,
+          "entity_count": 2,
+          "confidence": 0.9,
+          "reasoning": "该查询主要涉及单一实体'川菜'及其属性'特色菜'，属于简单的信息列举需求，无需复杂关系推理或多跳分析，适合传统混合检索策略直接获取菜品列表。"
+        },
+        "sources": [
+          {
+            "recipe_name": "麻婆豆腐",
+            "search_type": "dual_level",
+            "score": 0.046759212119155104,
+            "content_preview": "菜品名称: 麻婆豆腐\n分类: 荤菜\n菜系: 川菜\n难度: 3.0\n相关信息: 三星, Recipe"
+          },
+          {
+            "recipe_name": "酸辣土豆丝",
+            "search_type": "vector_enhanced",
+            "score": 0.0454615036704589,
+            "content_preview": "# 酸辣土豆丝\n\n菜系: 川菜\n难度: 2.0星\n\n时间信息: 准备时间: 10分钟, 烹饪时间: 5分钟\n份量: 1人份\n\n相关信息: 二星, Recipe, 素菜"
+          },
+          {
+            "recipe_name": "凉粉",
+            "search_type": "bm25",
+            "score": 0.04419642857142857,
+            "content_preview": "# 凉粉\n\n菜系: 川菜\n难度: 3.0星\n\n时间信息: 准备时间: 5分钟, 烹饪时间: 10分钟\n份量: 1人份"
+          },
+          {
+            "recipe_name": "水煮牛肉",
+            "search_type": "vector_enhanced",
+            "score": 0.03252247488101534,
+            "content_preview": "## 标签\n麻辣鲜香,川菜经典\n相关信息: 三星, Recipe, 荤菜"
+          },
+          {
+            "recipe_name": "回锅肉",
+            "search_type": "dual_level",
+            "score": 0.03055037313432836,
+            "content_preview": "菜品名称: 回锅肉\n分类: 荤菜\n菜系: 川菜\n难度: 4.0\n相关信息: 四星, Recipe"
+          }
+        ],
+        "elapsed": 9.960464000701904,
+        "error": false,
+        "timestamp": 1785202511.969
+      }
+    ]
   }
 ]

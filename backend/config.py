@@ -10,7 +10,7 @@ class GraphRAGConfig:
     """基于图数据库的RAG系统配置类"""
 
     # Neo4j数据库配置
-    neo4j_uri: str = "bolt://localhost:7687"
+    neo4j_uri: str = "bolt://localhost:17687"
     neo4j_user: str = "neo4j"
     neo4j_password: str = "all-in-rag"
     neo4j_database: str = "neo4j"
