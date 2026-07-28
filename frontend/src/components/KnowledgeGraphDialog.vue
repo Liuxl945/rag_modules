@@ -39,6 +39,13 @@ const legend = [
   { label: '分类', color: '#909399' },
 ]
 
+// 边关系类型中文映射
+const EDGE_LABELS: Record<string, string> = {
+  REQUIRES: '需要食材',
+  CONTAINS_STEP: '包含步骤',
+  BELONGS_TO_CATEGORY: '属于分类',
+}
+
 // vis-network 选项
 const OPTIONS: any = {
   nodes: { shape: 'dot', size: 18, borderWidth: 2, font: { size: 13, face: 'sans-serif' } },
@@ -46,6 +53,14 @@ const OPTIONS: any = {
     arrows: { to: { enabled: true, scaleFactor: 0.5 } },
     color: { color: '#c0c4cc', highlight: '#409eff', opacity: 0.7 },
     smooth: { type: 'continuous' },
+    font: {
+      size: 11,
+      color: '#909399',
+      strokeWidth: 3,
+      strokeColor: '#ffffff',
+      align: 'middle',
+    },
+    labelHighlightBold: false,
   },
   groups: {
     Recipe: { color: { background: '#409eff', border: '#337ecc' }, shape: 'star', size: 28 },
@@ -55,7 +70,7 @@ const OPTIONS: any = {
   },
   physics: {
     stabilization: { iterations: 200 },
-    barnesHut: { gravitationalConstant: -8000, springLength: 130, springConstant: 0.04 },
+    barnesHut: { gravitationalConstant: -8000, springLength: 160, springConstant: 0.04 },
   },
   interaction: { hover: true, tooltipDelay: 120 },
 }
@@ -126,7 +141,13 @@ async function loadAndRender(rid: string) {
       group: n.type,
       title: buildTooltip(n),
     }))
-    const edges = g.edges.map((e) => ({ from: e.from, to: e.to, arrows: 'to', title: e.type }))
+    const edges = g.edges.map((e) => ({
+      from: e.from,
+      to: e.to,
+      arrows: 'to',
+      title: EDGE_LABELS[e.type] || e.type,
+      label: EDGE_LABELS[e.type] || e.type,
+    }))
     network = new Network(containerRef.value, { nodes, edges }, OPTIONS)
   } catch (e: any) {
     error.value = e?.response?.data?.detail || '加载知识图谱失败'
