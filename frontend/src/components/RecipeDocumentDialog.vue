@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { listRecipeNames, getRecipeDocument } from '@/api'
 import type { RecipeDocument as RecipeDocumentType, RecipeName } from '@/types'
 
 const visible = defineModel<boolean>({ required: true })
+const props = defineProps<{ initialRid?: string | null }>()
 
 const title = '菜谱文档详情'
 
@@ -52,16 +53,39 @@ function onRecipeChange(rid: string) {
 }
 
 async function onOpened() {
-  if (recipeOptions.value.length) return
+  // 已有 options（之前加载过），直接选中 initialRid
+  if (recipeOptions.value.length) {
+    if (props.initialRid && selectedRid.value !== props.initialRid) {
+      selectedRid.value = props.initialRid
+      loadDocument(props.initialRid)
+    }
+    return
+  }
   loadingOptions.value = true
   try {
     recipeOptions.value = await listRecipeNames()
+    // 外部指定了 initialRid 时自动选中
+    if (props.initialRid) {
+      selectedRid.value = props.initialRid
+      loadDocument(props.initialRid)
+    }
   } catch {
     ElMessage.error('加载菜谱列表失败')
   } finally {
     loadingOptions.value = false
   }
 }
+
+// 对话框已打开时 initialRid 变化（如从浏览页直接切换菜谱）
+watch(
+  () => props.initialRid,
+  (rid) => {
+    if (rid && visible.value && recipeOptions.value.length) {
+      selectedRid.value = rid
+      loadDocument(rid)
+    }
+  }
+)
 </script>
 
 <template>

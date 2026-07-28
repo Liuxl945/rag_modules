@@ -41,6 +41,7 @@ onMounted(() => {
       </div>
       <el-menu mode="horizontal" router :default-active="$route.path" class="nav-menu">
         <el-menu-item index="/">聊天</el-menu-item>
+        <el-menu-item index="/browse">菜谱</el-menu-item>
         <el-menu-item index="/stats">统计</el-menu-item>
       </el-menu>
       <el-tag :type="statusType" effect="dark" class="status-tag">

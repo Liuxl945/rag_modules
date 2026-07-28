@@ -474,6 +474,12 @@ class AdvancedGraphRAGSystem:
             raise ValueError("系统未就绪，请先构建知识库")
         return self.data_module.get_all_recipe_names()
 
+    def get_recipe_list(self) -> list:
+        """返回所有菜谱的完整列表（含难度、分类、食材数、步骤数等元数据）。"""
+        if not self.system_ready:
+            raise ValueError("系统未就绪，请先构建知识库")
+        return self.data_module.get_recipe_list()
+
     def get_single_recipe_graph(self, recipe_id: str) -> dict:
         """返回指定菜谱的完整 1-hop 子图（所有食材/步骤/分类，无限制）。"""
         if not self.system_ready:

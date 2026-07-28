@@ -9,6 +9,7 @@ import type {
   ChatMessage,
   KnowledgeGraph,
   RecipeName,
+  RecipeListItem,
   RecipeDocument,
   UploadRecipeResponse,
 } from '@/types'
@@ -33,6 +34,12 @@ export async function getStats(): Promise<SystemStats> {
 /** 获取所有菜谱的 id/name/category 列表（下拉选择用） */
 export async function listRecipeNames(): Promise<RecipeName[]> {
   const { data } = await http.get<{ recipes: RecipeName[] }>('/recipes')
+  return data.recipes
+}
+
+/** 获取所有菜谱的完整列表（含难度、分类、食材数等元数据，浏览页用） */
+export async function listRecipesFull(): Promise<RecipeListItem[]> {
+  const { data } = await http.get<{ recipes: RecipeListItem[] }>('/recipes/list')
   return data.recipes
 }
 

@@ -1097,6 +1097,32 @@ class GraphDataPreparationModule:
             for r in self.recipes
         ]
 
+    def get_recipe_list(self) -> List[Dict[str, Any]]:
+        """返回所有菜谱的完整列表（含难度、分类、食材数、步骤数等元数据，供前端浏览页使用）。"""
+        # 构建 node_id -> Document metadata 的映射
+        doc_meta: Dict[str, Dict[str, Any]] = {}
+        for d in self.documents:
+            nid = d.metadata.get("node_id")
+            if nid:
+                doc_meta[str(nid)] = d.metadata
+
+        result = []
+        for r in self.recipes:
+            meta = doc_meta.get(str(r.node_id), {})
+            result.append({
+                "id": r.node_id,
+                "name": r.name,
+                "category": r.properties.get("category", "") or meta.get("category", ""),
+                "cuisine_type": r.properties.get("cuisineType", "") or meta.get("cuisine_type", ""),
+                "difficulty": r.properties.get("difficulty", 0) or meta.get("difficulty", 0),
+                "description": r.properties.get("description", ""),
+                "image_path": r.properties.get("imagePath", "") or meta.get("image_path", ""),
+                "source": r.properties.get("source", "neo4j"),
+                "ingredients_count": meta.get("ingredients_count", 0),
+                "steps_count": meta.get("steps_count", 0),
+            })
+        return result
+
     def get_single_recipe_graph(self, recipe_id: str) -> Dict[str, Any]:
         """返回指定菜谱的完整 1-hop 子图（所有 Ingredient / CookingStep / Category，无限制）。
 

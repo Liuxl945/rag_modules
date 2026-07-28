@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import ChatMessage from '@/components/ChatMessage.vue'
 import MessageInput from '@/components/MessageInput.vue'
 import ConversationSidebar from '@/components/ConversationSidebar.vue'
@@ -8,8 +9,12 @@ import { useConversationStore } from '@/stores/conversations'
 
 const systemStore = useSystemStore()
 const store = useConversationStore()
+const route = useRoute()
+const router = useRouter()
 
 const scrollRef = ref<HTMLDivElement | null>(null)
+// 标记本次挂载是否已处理过 ask 查询参数，避免重复发送
+const askHandled = ref(false)
 
 async function scrollToBottom() {
   await nextTick()
@@ -32,6 +37,23 @@ function send(question: string) {
 function stop() {
   store.stop()
 }
+
+// 处理来自浏览页等外部页面的 "ask" 查询参数：系统就绪后自动发送一次
+watch(
+  () => systemStore.ready,
+  (ready) => {
+    if (!ready || askHandled.value) return
+    const q = route.query.ask
+    const question = Array.isArray(q) ? q[0] : q
+    if (question && typeof question === 'string') {
+      askHandled.value = true
+      send(question)
+      // 清掉 query，避免刷新或返回时重复发送
+      router.replace({ path: route.path, query: {} })
+    }
+  },
+  { immediate: true }
+)
 
 onMounted(() => {
   systemStore.startPolling()

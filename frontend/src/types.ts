@@ -113,6 +113,20 @@ export interface RecipeName {
   category: string
 }
 
+/** 菜谱完整信息（浏览页列表用） */
+export interface RecipeListItem {
+  id: string
+  name: string
+  category: string
+  cuisine_type: string
+  difficulty: number
+  description: string
+  image_path: string
+  source: string
+  ingredients_count: number
+  steps_count: number
+}
+
 /** 菜谱文档详情（完整文档内容 + 元数据） */
 export interface RecipeDocument {
   content: string

@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref, onUnmounted } from 'vue'
+import { ref, onUnmounted, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { listRecipeNames, getRecipeGraph } from '@/api'
 import type { KnowledgeGraph, KnowledgeNode, RecipeName } from '@/types'
 
 const visible = defineModel<boolean>({ required: true })
+const props = defineProps<{ initialRid?: string | null }>()
 
 const title = '菜谱知识图谱'
 
@@ -161,16 +162,36 @@ function onRecipeChange(rid: string) {
 }
 
 async function onOpened() {
-  if (recipeOptions.value.length) return
+  // 如果已有 options（之前加载过），直接选中 initialRid
+  if (recipeOptions.value.length) {
+    if (props.initialRid && selectedRid.value !== props.initialRid) {
+      selectedRid.value = props.initialRid
+      loadAndRender(props.initialRid)
+    }
+    return
+  }
   loadingOptions.value = true
   try {
     recipeOptions.value = await listRecipeNames()
+    // 外部指定了 initialRid 时自动选中
+    if (props.initialRid) {
+      selectedRid.value = props.initialRid
+      loadAndRender(props.initialRid)
+    }
   } catch {
     ElMessage.error('加载菜谱列表失败')
   } finally {
     loadingOptions.value = false
   }
 }
+
+// 对话框已打开时 initialRid 变化（如从浏览页直接切换菜谱）
+watch(() => props.initialRid, (rid) => {
+  if (rid && visible.value && recipeOptions.value.length) {
+    selectedRid.value = rid
+    loadAndRender(rid)
+  }
+})
 
 onUnmounted(destroyNetwork)
 </script>

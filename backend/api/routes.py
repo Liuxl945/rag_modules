@@ -93,6 +93,16 @@ async def list_recipes():
     return {"recipes": system.get_all_recipe_names()}
 
 
+@router.get("/recipes/list")
+async def list_recipes_full():
+    """返回所有菜谱的完整列表（含难度、分类、食材数、步骤数等元数据），供前端浏览页使用。"""
+    system = _require_system()
+    try:
+        return {"recipes": system.get_recipe_list()}
+    except ValueError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+
+
 @router.get("/knowledge-graph/recipe/{recipe_id}")
 async def recipe_graph(recipe_id: str):
     """返回指定菜谱的完整 1-hop 子图（所有 Ingredient/CookingStep/Category，无限制）。"""
