@@ -14,7 +14,7 @@ import json
 import logging
 import time
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, UploadFile, File
 from sse_starlette.sse import EventSourceResponse
 
 from .state import state
@@ -26,6 +26,7 @@ from .schemas import (
     SourceDoc,
     HealthResponse,
     RebuildResponse,
+    UploadRecipeResponse,
     ConversationCreateRequest,
     MessageCreateRequest,
     ConversationRenameRequest,
@@ -110,6 +111,50 @@ async def recipe_document(recipe_id: str):
         return await asyncio.to_thread(system.get_recipe_document, recipe_id)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+
+
+@router.post("/recipes/upload", response_model=UploadRecipeResponse)
+async def upload_recipe(file: UploadFile = File(...)):
+    """上传 Markdown 菜谱文件（.md），解析并写入知识库（Neo4j + Milvus + 索引）。"""
+    system = _require_system()
+
+    # 校验文件后缀
+    if not file.filename or not file.filename.lower().endswith('.md'):
+        raise HTTPException(status_code=400, detail="只支持 .md 格式的 Markdown 文件")
+
+    # 读取文件内容
+    try:
+        content_bytes = await file.read()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"读取文件失败: {e}")
+
+    if len(content_bytes) > 100_000:
+        raise HTTPException(status_code=400, detail="文件过大，最大支持 100KB")
+
+    # 编码处理：UTF-8 优先，GBK 回退
+    try:
+        content = content_bytes.decode('utf-8')
+    except UnicodeDecodeError:
+        try:
+            content = content_bytes.decode('gbk')
+        except UnicodeDecodeError:
+            raise HTTPException(status_code=400, detail="文件编码不支持，请使用 UTF-8 或 GBK 编码")
+
+    if not content.strip():
+        raise HTTPException(status_code=400, detail="文件内容为空")
+
+    # 在线程池中执行阻塞操作（Neo4j 写入 + embedding 计算）
+    try:
+        result = await asyncio.to_thread(
+            system.upload_markdown_recipe, content, file.filename
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.exception("菜谱上传失败")
+        raise HTTPException(status_code=500, detail=f"上传失败: {e}")
+
+    return UploadRecipeResponse(**result)
 
 
 # ---------------------------------------------------------------------------

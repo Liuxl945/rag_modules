@@ -18,12 +18,16 @@ import json
 import os
 import pickle
 import hashlib
+import time
+import uuid
 from collections import defaultdict
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
 
 from neo4j import GraphDatabase
 from langchain_core.documents import Document
+
+from .markdown_parser import ParsedRecipe
 
 logger = logging.getLogger(__name__)
 
@@ -147,7 +151,7 @@ class GraphDataPreparationModule:
             # ---------------------------------------------------------------
             recipes_query = """
             MATCH (r:Recipe)
-            WHERE r.nodeId >= '200000000'
+            WHERE r.nodeId >= '200000000' OR r.nodeId STARTS WITH 'upload_'
             OPTIONAL MATCH (r)-[:BELONGS_TO_CATEGORY]->(c:Category)
             WITH r, collect(c.name) as categories
             RETURN r.nodeId as nodeId, labels(r) as labels, r.name as name,
@@ -184,7 +188,7 @@ class GraphDataPreparationModule:
             # ---------------------------------------------------------------
             ingredients_query = """
             MATCH (i:Ingredient)
-            WHERE i.nodeId >= '200000000'
+            WHERE i.nodeId >= '200000000' OR i.nodeId STARTS WITH 'ing_upload_'
             RETURN i.nodeId as nodeId, labels(i) as labels, i.name as name,
                    properties(i) as properties
             ORDER BY i.nodeId
@@ -208,7 +212,7 @@ class GraphDataPreparationModule:
             # ---------------------------------------------------------------
             steps_query = """
             MATCH (s:CookingStep)
-            WHERE s.nodeId >= '200000000'
+            WHERE s.nodeId >= '200000000' OR s.nodeId CONTAINS '_step_'
             RETURN s.nodeId as nodeId, labels(s) as labels, s.name as name,
                    properties(s) as properties
             ORDER BY s.nodeId
@@ -491,6 +495,206 @@ class GraphDataPreparationModule:
             logger.info(f"已清理菜谱文档缓存：删除 {removed} 个文件")
         except Exception as e:
             logger.warning(f"清理菜谱文档缓存失败: {e}")
+
+    def ingest_markdown_recipe(self, parsed: "ParsedRecipe") -> Dict[str, Any]:
+        """将 Markdown 解析结果写入 Neo4j 并更新内存列表。
+
+        执行流程（单事务保证原子性）：
+            1. 生成唯一 recipe_id（upload_ 前缀 + 时间戳 + uuid 片段）
+            2. CREATE Recipe 节点
+            3. MERGE Ingredient 节点（按 name 复用已有，新建的分配 ing_upload_ 前缀 ID）
+            4. CREATE CookingStep 节点
+            5. 建立 REQUIRES / CONTAINS_STEP / BELONGS_TO_CATEGORY 关系
+            6. 更新内存 lists（self.recipes / self.ingredients / self.cooking_steps）
+
+        Args:
+            parsed: markdown_parser.parse_markdown_recipe() 的返回结果
+
+        Returns:
+            {recipe_id, recipe_name, difficulty, ingredients_added, ingredients_reused, steps_count}
+        """
+        ts = int(time.time() * 1000)
+        recipe_id = f"upload_{ts}_{uuid.uuid4().hex[:8]}"
+        ing_ts = f"ing_upload_{ts}"
+        category_name = "用户上传"
+
+        # 记录已有的食材名集合，用于区分新增 vs 复用
+        existing_ing_names = {ing.name for ing in self.ingredients}
+        new_ingredients: List[Dict[str, str]] = []  # 新增的食材 {node_id, name}
+        ing_name_to_id: Dict[str, str] = {}         # 所有食材 name -> node_id 映射
+
+        # 先查已有食材的 nodeId（按 name 匹配）
+        with self.driver.session() as session:
+            for ing in parsed.ingredients:
+                if ing.name in ing_name_to_id:
+                    continue
+                if ing.name in existing_ing_names:
+                    # 从内存列表找 node_id
+                    for existing in self.ingredients:
+                        if existing.name == ing.name:
+                            ing_name_to_id[ing.name] = existing.node_id
+                            break
+                else:
+                    # 查 Neo4j 是否已有同名 Ingredient（可能是之前上传的）
+                    result = session.run(
+                        "MATCH (i:Ingredient {name: $name}) RETURN i.nodeId AS nid LIMIT 1",
+                        name=ing.name,
+                    )
+                    record = result.single()
+                    if record and record["nid"]:
+                        ing_name_to_id[ing.name] = record["nid"]
+                    else:
+                        new_id = f"{ing_ts}_{uuid.uuid4().hex[:6]}"
+                        ing_name_to_id[ing.name] = new_id
+                        new_ingredients.append({"node_id": new_id, "name": ing.name})
+
+        # 构建用量 map：name -> {amount, unit}
+        amount_map: Dict[str, Dict[str, Any]] = {}
+        for ia in parsed.ingredient_amounts:
+            amount_map[ia.name] = {"amount": ia.amount, "unit": ia.unit}
+
+        # 单事务写入所有节点和关系
+        with self.driver.session() as session:
+            def _write_tx(tx):
+                # 1. 创建 Recipe 节点
+                tx.run(
+                    """
+                    CREATE (r:Recipe {
+                        nodeId: $recipe_id,
+                        name: $name,
+                        difficulty: $difficulty,
+                        category: $category,
+                        cuisineType: $category,
+                        description: $description,
+                        source: 'markdown_upload',
+                        imagePath: $image_path,
+                        additionalNotes: $notes
+                    })
+                    """,
+                    recipe_id=recipe_id,
+                    name=parsed.name,
+                    difficulty=parsed.difficulty,
+                    category=category_name,
+                    description=f"用户上传菜谱：{parsed.name}",
+                    image_path=parsed.image_path or "",
+                    notes="\n".join(parsed.additional_notes) if parsed.additional_notes else "",
+                )
+
+                # 2. MERGE/CREATE Ingredient 节点
+                for ing in parsed.ingredients:
+                    nid = ing_name_to_id[ing.name]
+                    tx.run(
+                        """
+                        MERGE (i:Ingredient {name: $name})
+                        ON CREATE SET i.nodeId = $nid, i.category = '未知'
+                        """,
+                        name=ing.name,
+                        nid=nid,
+                    )
+
+                # 3. CREATE CookingStep 节点 + CONTAINS_STEP 关系
+                for i, step_text in enumerate(parsed.steps):
+                    step_id = f"{recipe_id}_step_{i}"
+                    tx.run(
+                        """
+                        CREATE (s:CookingStep {
+                            nodeId: $step_id,
+                            name: $step_name,
+                            description: $description,
+                            stepNumber: $step_number
+                        })
+                        WITH s
+                        MATCH (r:Recipe {nodeId: $recipe_id})
+                        CREATE (r)-[:CONTAINS_STEP {stepOrder: $step_order}]->(s)
+                        """,
+                        step_id=step_id,
+                        step_name=f"步骤{i+1}",
+                        description=step_text,
+                        step_number=i + 1,
+                        recipe_id=recipe_id,
+                        step_order=i,
+                    )
+
+                # 4. REQUIRES 关系（含用量）
+                for ing in parsed.ingredients:
+                    nid = ing_name_to_id[ing.name]
+                    am = amount_map.get(ing.name, {})
+                    tx.run(
+                        """
+                        MATCH (r:Recipe {nodeId: $recipe_id}), (i:Ingredient {name: $ing_name})
+                        CREATE (r)-[:REQUIRES {amount: $amount, unit: $unit}]->(i)
+                        """,
+                        recipe_id=recipe_id,
+                        ing_name=ing.name,
+                        amount=am.get("amount") if am.get("amount") is not None else 0,
+                        unit=am.get("unit") or "",
+                    )
+
+                # 5. BELONGS_TO_CATEGORY 关系
+                tx.run(
+                    """
+                    MERGE (c:Category {name: $cat_name})
+                    WITH c
+                    MATCH (r:Recipe {nodeId: $recipe_id})
+                    CREATE (r)-[:BELONGS_TO_CATEGORY]->(c)
+                    """,
+                    cat_name=category_name,
+                    recipe_id=recipe_id,
+                )
+
+            session.execute_write(_write_tx)
+
+        # 更新内存列表
+        recipe_node = GraphNode(
+            node_id=recipe_id,
+            labels=["Recipe"],
+            name=parsed.name,
+            properties={
+                "category": category_name,
+                "cuisineType": category_name,
+                "difficulty": parsed.difficulty,
+                "description": f"用户上传菜谱：{parsed.name}",
+                "imagePath": parsed.image_path or "",
+                "additionalNotes": parsed.additional_notes,
+                "source": "markdown_upload",
+                "all_categories": [category_name],
+            },
+        )
+        self.recipes.append(recipe_node)
+
+        for ing_info in new_ingredients:
+            self.ingredients.append(GraphNode(
+                node_id=ing_info["node_id"],
+                labels=["Ingredient"],
+                name=ing_info["name"],
+                properties={"category": "未知"},
+            ))
+
+        for i, step_text in enumerate(parsed.steps):
+            self.cooking_steps.append(GraphNode(
+                node_id=f"{recipe_id}_step_{i}",
+                labels=["CookingStep"],
+                name=f"步骤{i+1}",
+                properties={"description": step_text, "stepNumber": i + 1},
+            ))
+
+        ingredients_added = len(new_ingredients)
+        ingredients_reused = len(parsed.ingredients) - ingredients_added
+        logger.info(
+            f"菜谱 '{parsed.name}' 写入Neo4j完成 (id={recipe_id}): "
+            f"新增食材{ingredients_added}个, 复用食材{ingredients_reused}个, "
+            f"步骤{len(parsed.steps)}个"
+        )
+
+        return {
+            "recipe_id": recipe_id,
+            "recipe_name": parsed.name,
+            "difficulty": parsed.difficulty,
+            "ingredients_added": ingredients_added,
+            "ingredients_reused": ingredients_reused,
+            "steps_count": len(parsed.steps),
+            "ingredient_ids": ing_name_to_id,  # name -> node_id 映射，供后续图索引使用
+        }
 
     def chunk_documents(self, chunk_size: int = 500, chunk_overlap: int = 50) -> List[Document]:
         """对文档进行分块处理。

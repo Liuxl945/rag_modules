@@ -10,6 +10,7 @@ import type {
   KnowledgeGraph,
   RecipeName,
   RecipeDocument,
+  UploadRecipeResponse,
 } from '@/types'
 
 const http = axios.create({
@@ -48,6 +49,17 @@ export async function getRecipeDocument(recipeId: string): Promise<RecipeDocumen
   const { data } = await http.get<RecipeDocument>(
     `/recipe-document/${encodeURIComponent(recipeId)}`,
   )
+  return data
+}
+
+/** 上传 Markdown 菜谱文件 */
+export async function uploadRecipe(file: File): Promise<UploadRecipeResponse> {
+  const formData = new FormData()
+  formData.append('file', file)
+  const { data } = await http.post<UploadRecipeResponse>('/recipes/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: 60000,
+  })
   return data
 }
 

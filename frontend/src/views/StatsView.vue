@@ -5,6 +5,8 @@ import { getStats, rebuildKnowledgeBase } from '@/api'
 import type { SystemStats } from '@/types'
 import KnowledgeGraphDialog from '@/components/KnowledgeGraphDialog.vue'
 import RecipeDocumentDialog from '@/components/RecipeDocumentDialog.vue'
+import RecipeUploadDialog from '@/components/RecipeUploadDialog.vue'
+import type { UploadRecipeResponse } from '@/types'
 
 const stats = ref<SystemStats | null>(null)
 const loading = ref(false)
@@ -14,6 +16,8 @@ const rebuilding = ref(false)
 const graphVisible = ref(false)
 // 菜谱文档详情弹窗
 const docVisible = ref(false)
+// 上传菜谱弹窗
+const uploadVisible = ref(false)
 
 async function refresh() {
   loading.value = true
@@ -23,6 +27,14 @@ async function refresh() {
     ElMessage.error(e?.response?.data?.detail || '获取统计失败')
   } finally {
     loading.value = false
+  }
+}
+
+function onUploaded(res: UploadRecipeResponse) {
+  if (res.stats) {
+    stats.value = res.stats
+  } else {
+    refresh()
   }
 }
 
@@ -94,6 +106,7 @@ onMounted(refresh)
       <h2>系统统计</h2>
       <div>
         <el-button :loading="loading" @click="refresh">刷新</el-button>
+        <el-button type="primary" @click="uploadVisible = true">上传菜谱</el-button>
         <el-button type="danger" :loading="rebuilding" @click="rebuild">重建知识库</el-button>
       </div>
     </div>
@@ -151,6 +164,8 @@ onMounted(refresh)
     <KnowledgeGraphDialog v-model="graphVisible" />
     <!-- 菜谱文档详情弹窗 -->
     <RecipeDocumentDialog v-model="docVisible" />
+    <!-- 上传菜谱弹窗 -->
+    <RecipeUploadDialog v-model="uploadVisible" @uploaded="onUploaded" />
   </div>
 </template>
 

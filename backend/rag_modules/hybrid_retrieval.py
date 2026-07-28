@@ -41,7 +41,7 @@ import jieba
 from rank_bm25 import BM25Okapi
 from langchain_core.documents import Document
 from neo4j import GraphDatabase
-from .graph_indexing import GraphIndexingModule
+from .graph_indexing import GraphIndexingModule, EntityKeyValue, RelationKeyValue
 
 logger = logging.getLogger(__name__)
 
@@ -999,6 +999,152 @@ class HybridRetrievalModule:
             if nid is not None:
                 m[str(nid)] = d
         return m
+
+    def rebuild_bm25(self):
+        """从当前 data_module.chunks 重建 BM25 索引（上传新文档后调用）。
+
+        rank_bm25.BM25Okapi 不支持增量添加，上传菜谱后需从全量 chunks 重建。
+        利用已有的分词缓存机制（指纹匹配自动跳过重复分词）。
+        """
+        chunks = self.data_module.chunks or []
+        if not chunks:
+            logger.warning("rebuild_bm25: 无 chunks，跳过")
+            return
+        self.bm25_corpus_docs = list(chunks)
+        fingerprint = self._compute_corpus_fingerprint(self.bm25_corpus_docs)
+        tokenized_corpus = self._load_tokenized_cache(fingerprint)
+        if tokenized_corpus is None:
+            logger.info("BM25 重建：未命中分词缓存，开始 jieba 分词...")
+            tokenized_corpus = [self._tokenize_chinese(d.page_content) for d in self.bm25_corpus_docs]
+            self._save_tokenized_cache(fingerprint, tokenized_corpus)
+        self.bm25 = BM25Okapi(tokenized_corpus)
+        logger.info(f"BM25 索引重建完成，文档数: {len(self.bm25_corpus_docs)}")
+
+    def add_recipe_to_graph_index(
+        self,
+        recipe_node,
+        parsed,
+        recipe_id: str,
+        ingredient_ids: Dict[str, str],
+    ):
+        """增量添加单个上传菜谱到图 KV 索引。
+
+        Args:
+            recipe_node: GraphNode（刚加入 data_module.recipes 的新菜谱节点）
+            parsed: ParsedRecipe 解析结果
+            recipe_id: 菜谱 nodeId
+            ingredient_ids: 食材 name -> nodeId 映射（含复用的和新建的）
+        """
+        gi = self.graph_indexing
+
+        # 1. 添加 Recipe 实体
+        recipe_value = (
+            f"菜品名称: {recipe_node.name}\n"
+            f"分类: 用户上传\n"
+            f"难度: {parsed.difficulty}星\n"
+            f"食材数: {len(parsed.ingredients)}\n"
+            f"步骤数: {len(parsed.steps)}"
+        )
+        recipe_entity = EntityKeyValue(
+            entity_name=recipe_node.name,
+            index_keys=[recipe_node.name, f"{recipe_node.name}的做法"],
+            value_content=recipe_value,
+            entity_type="Recipe",
+            metadata={"node_id": recipe_id, "properties": recipe_node.properties},
+        )
+        gi.entity_kv_store[recipe_id] = recipe_entity
+        for key in recipe_entity.index_keys:
+            if recipe_id not in gi.key_to_entities[key]:
+                gi.key_to_entities[key].append(recipe_id)
+
+        # 2. 添加食材实体和 REQUIRES 关系
+        for ing in parsed.ingredients:
+            ing_nid = ingredient_ids.get(ing.name)
+            if not ing_nid:
+                continue
+            # 仅当该食材尚未在 KV 存储中时新增（复用的跳过）
+            if ing_nid not in gi.entity_kv_store:
+                ing_entity = EntityKeyValue(
+                    entity_name=ing.name,
+                    index_keys=[ing.name],
+                    value_content=f"食材: {ing.name}\n分类: 未知",
+                    entity_type="Ingredient",
+                    metadata={"node_id": ing_nid},
+                )
+                gi.entity_kv_store[ing_nid] = ing_entity
+                gi.key_to_entities[ing.name].append(ing_nid)
+
+            # REQUIRES 关系
+            rel_id = f"rel_{recipe_id}_REQUIRES_{ing_nid}"
+            ing_amount = None
+            for ia in parsed.ingredient_amounts:
+                if ia.name == ing.name:
+                    ing_amount = ia
+                    break
+            rel_content = f"{recipe_node.name} 需要食材 {ing.name}"
+            if ing_amount and ing_amount.amount is not None and ing_amount.unit:
+                rel_content += f"，用量: {ing_amount.amount}{ing_amount.unit}"
+            rel = RelationKeyValue(
+                relation_id=rel_id,
+                index_keys=["REQUIRES", "食材搭配", "烹饪原料", ing.name],
+                value_content=rel_content,
+                relation_type="REQUIRES",
+                source_entity=recipe_id,
+                target_entity=ing_nid,
+                metadata={"source_name": recipe_node.name, "target_name": ing.name},
+            )
+            gi.relation_kv_store[rel_id] = rel
+            for key in rel.index_keys:
+                gi.key_to_relations[key].append(rel_id)
+
+        # 3. 添加步骤实体和 CONTAINS_STEP 关系
+        for i, step_text in enumerate(parsed.steps):
+            step_id = f"{recipe_id}_step_{i}"
+            step_name = f"步骤{i+1}"
+            step_entity = EntityKeyValue(
+                entity_name=step_name,
+                index_keys=[step_name, f"{recipe_node.name}{step_name}"],
+                value_content=f"{step_name}（{recipe_node.name}）: {step_text}",
+                entity_type="CookingStep",
+                metadata={"node_id": step_id, "description": step_text, "stepNumber": i + 1},
+            )
+            gi.entity_kv_store[step_id] = step_entity
+            for key in step_entity.index_keys:
+                gi.key_to_entities[key].append(step_id)
+
+            step_rel_id = f"rel_{recipe_id}_CONTAINS_STEP_{step_id}"
+            step_rel = RelationKeyValue(
+                relation_id=step_rel_id,
+                index_keys=["CONTAINS_STEP", "烹饪步骤", f"{recipe_node.name}步骤"],
+                value_content=f"{recipe_node.name} {step_name}: {step_text}",
+                relation_type="CONTAINS_STEP",
+                source_entity=recipe_id,
+                target_entity=step_id,
+                metadata={"source_name": recipe_node.name, "step_order": i},
+            )
+            gi.relation_kv_store[step_rel_id] = step_rel
+            for key in step_rel.index_keys:
+                gi.key_to_relations[key].append(step_rel_id)
+
+        # 4. BELONGS_TO_CATEGORY 关系（到"用户上传"分类）
+        cat_rel_id = f"rel_{recipe_id}_BELONGS_TO_CATEGORY_upload"
+        cat_rel = RelationKeyValue(
+            relation_id=cat_rel_id,
+            index_keys=["BELONGS_TO_CATEGORY", "菜品分类", "用户上传"],
+            value_content=f"{recipe_node.name} 属于分类 用户上传",
+            relation_type="BELONGS_TO_CATEGORY",
+            source_entity=recipe_id,
+            target_entity="cat:用户上传",
+            metadata={"source_name": recipe_node.name, "category": "用户上传"},
+        )
+        gi.relation_kv_store[cat_rel_id] = cat_rel
+        for key in cat_rel.index_keys:
+            gi.key_to_relations[key].append(cat_rel_id)
+
+        logger.info(
+            f"图 KV 索引增量更新完成: +1 Recipe, +{len(parsed.ingredients)} Ingredients(含复用), "
+            f"+{len(parsed.steps)} Steps"
+        )
 
     def _attach_parent_documents(self, docs: List[Document]) -> List[Document]:
         """RRF 融合后，对前 top_n 条命中进行「父文档回填」。

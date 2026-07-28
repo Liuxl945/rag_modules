@@ -53,6 +53,8 @@ from rag_modules import (
 from rag_modules.hybrid_retrieval import HybridRetrievalModule
 from rag_modules.graph_rag_retrieval import GraphRAGRetrieval
 from rag_modules.intelligent_query_router import IntelligentQueryRouter, QueryAnalysis
+from rag_modules.markdown_parser import parse_markdown_recipe
+from langchain_core.documents import Document
 
 # 加载环境变量（如 DEEPSEEK_API_KEY 等）
 load_dotenv()
@@ -489,6 +491,192 @@ class AdvancedGraphRAGSystem:
                     "metadata": doc.metadata,
                 }
         raise ValueError(f"未找到菜谱文档: {recipe_id}")
+
+    def upload_markdown_recipe(self, content: str, filename: str = "") -> dict:
+        """解析 Markdown 菜谱并写入知识库（Neo4j + Milvus + 内存索引）。
+
+        供 Web API 调用，运行在线程池中（Neo4j 写入 + embedding 计算均为阻塞操作）。
+
+        Args:
+            content: Markdown 文件文本内容
+            filename: 原始文件名（用于日志）
+
+        Returns:
+            {success, message, recipe_id, recipe_name, chunks_created, ingredients, steps, milvus_ok, stats}
+        """
+        if not self.system_ready:
+            raise ValueError("系统未就绪，请先构建知识库")
+
+        # 1. 解析 Markdown
+        logger.info(f"开始解析上传的菜谱 Markdown: {filename or '(unnamed)'}")
+        parsed = parse_markdown_recipe(content)
+        logger.info(f"解析完成: 菜名='{parsed.name}', 食材{len(parsed.ingredients)}个, 步骤{len(parsed.steps)}个")
+
+        # 2. 写入 Neo4j + 更新内存节点列表
+        ingest_result = self.data_module.ingest_markdown_recipe(parsed)
+        recipe_id = ingest_result["recipe_id"]
+
+        # 3. 构建 LangChain Document（与 build_recipe_documents 格式一致）
+        content_parts = [f"# {parsed.name}"]
+        if parsed.difficulty:
+            content_parts.append(f"难度: {parsed.difficulty}星")
+        if parsed.image_path:
+            content_parts.append(f"图片: {parsed.image_path}")
+        if parsed.ingredient_amounts:
+            content_parts.append("\n## 所需食材")
+            for i, ing in enumerate(parsed.ingredient_amounts, 1):
+                line = f"{i}. {ing.name}"
+                if ing.amount is not None and ing.unit:
+                    line += f"({ing.amount}{ing.unit})"
+                elif ing.unit:
+                    line += f"({ing.unit})"
+                content_parts.append(line)
+        elif parsed.ingredients:
+            content_parts.append("\n## 所需食材")
+            for i, ing in enumerate(parsed.ingredients, 1):
+                content_parts.append(f"{i}. {ing.name}")
+        if parsed.steps:
+            content_parts.append("\n## 制作步骤")
+            for i, step in enumerate(parsed.steps, 1):
+                content_parts.append(f"\n### 第{i}步\n步骤: {step}")
+        if parsed.additional_notes:
+            content_parts.append("\n## 附加内容")
+            for note in parsed.additional_notes:
+                content_parts.append(f"- {note}")
+
+        full_content = "\n".join(content_parts)
+
+        new_doc = Document(
+            page_content=full_content,
+            metadata={
+                "node_id": recipe_id,
+                "recipe_name": parsed.name,
+                "node_type": "Recipe",
+                "category": "用户上传",
+                "cuisine_type": "用户上传",
+                "difficulty": parsed.difficulty,
+                "ingredients_count": len(parsed.ingredients),
+                "steps_count": len(parsed.steps),
+                "doc_type": "recipe",
+                "content_length": len(full_content),
+                "source": "markdown_upload",
+            },
+        )
+        self.data_module.documents.append(new_doc)
+
+        # 4. 对单篇文档分块（复用 chunk_documents 逻辑）
+        new_chunks = []
+        chunk_size = self.config.chunk_size
+        chunk_overlap = self.config.chunk_overlap
+        doc_content = new_doc.page_content
+
+        if len(doc_content) <= chunk_size:
+            chunk = Document(
+                page_content=doc_content,
+                metadata={
+                    **new_doc.metadata,
+                    "chunk_id": f"{recipe_id}_chunk_0",
+                    "parent_id": recipe_id,
+                    "chunk_index": 0,
+                    "total_chunks": 1,
+                    "chunk_size": len(doc_content),
+                    "doc_type": "chunk",
+                },
+            )
+            new_chunks.append(chunk)
+        else:
+            sections = doc_content.split('\n## ')
+            if len(sections) <= 1:
+                total_chunks = (len(doc_content) - 1) // (chunk_size - chunk_overlap) + 1
+                for i in range(total_chunks):
+                    start = i * (chunk_size - chunk_overlap)
+                    end = min(start + chunk_size, len(doc_content))
+                    chunk_content = doc_content[start:end]
+                    new_chunks.append(Document(
+                        page_content=chunk_content,
+                        metadata={
+                            **new_doc.metadata,
+                            "chunk_id": f"{recipe_id}_chunk_{i}",
+                            "parent_id": recipe_id,
+                            "chunk_index": i,
+                            "total_chunks": total_chunks,
+                            "chunk_size": len(chunk_content),
+                            "doc_type": "chunk",
+                        },
+                    ))
+            else:
+                total_chunks = len(sections)
+                for i, section in enumerate(sections):
+                    chunk_content = section if i == 0 else f"## {section}"
+                    new_chunks.append(Document(
+                        page_content=chunk_content,
+                        metadata={
+                            **new_doc.metadata,
+                            "chunk_id": f"{recipe_id}_chunk_{i}",
+                            "parent_id": recipe_id,
+                            "chunk_index": i,
+                            "total_chunks": total_chunks,
+                            "chunk_size": len(chunk_content),
+                            "doc_type": "chunk",
+                            "section_title": section.split('\n')[0] if i > 0 else "主标题",
+                        },
+                    ))
+
+        self.data_module.chunks.extend(new_chunks)
+
+        # 5. 插入 Milvus（增量）
+        milvus_ok = True
+        try:
+            milvus_ok = self.index_module.add_documents(new_chunks)
+            if not milvus_ok:
+                logger.warning("Milvus 插入失败，但 Neo4j 数据已保留")
+        except Exception as e:
+            logger.error(f"Milvus 插入异常: {e}")
+            milvus_ok = False
+
+        # 6. 重建 BM25 索引
+        try:
+            self.traditional_retrieval.rebuild_bm25()
+            logger.info("BM25 索引重建完成")
+        except Exception as e:
+            logger.error(f"BM25 重建失败: {e}")
+
+        # 7. 增量更新图 KV 索引
+        try:
+            self.traditional_retrieval.add_recipe_to_graph_index(
+                recipe_node=self.data_module.recipes[-1],  # 刚添加的 recipe GraphNode
+                parsed=parsed,
+                recipe_id=recipe_id,
+                ingredient_ids=ingest_result["ingredient_ids"],
+            )
+            logger.info("图 KV 索引增量更新完成")
+        except Exception as e:
+            logger.error(f"图 KV 索引更新失败: {e}")
+
+        # 8. 更新父文档映射
+        try:
+            self.traditional_retrieval._parent_doc_map[recipe_id] = new_doc
+        except Exception:
+            pass
+
+        # 9. 清除文档缓存（重启时从 Neo4j 重新加载）
+        self.data_module.clear_documents_cache()
+
+        message = f"菜谱 '{parsed.name}' 上传成功"
+        if not milvus_ok:
+            message += "（向量索引更新失败，可稍后重建知识库修复）"
+
+        return {
+            "success": True,
+            "message": message,
+            "recipe_id": recipe_id,
+            "recipe_name": parsed.name,
+            "chunks_created": len(new_chunks),
+            "ingredients": len(parsed.ingredients),
+            "steps": len(parsed.steps),
+            "milvus_ok": milvus_ok,
+            "stats": self.get_system_stats(),
+        }
 
     def rebuild_knowledge_base(self) -> dict:
         """重建知识库（删除现有向量数据并重新构建），无确认 prompt。

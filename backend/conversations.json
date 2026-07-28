@@ -154,7 +154,7 @@
     "id": "conv-3",
     "title": "川菜有哪些特色菜？",
     "created_at": 1785202501.9904623,
-    "updated_at": 1785202511.969,
+    "updated_at": 1785208210.145,
     "messages": [
       {
         "id": "msg-7",
@@ -214,6 +214,65 @@
         "elapsed": 9.960464000701904,
         "error": false,
         "timestamp": 1785202511.969
+      },
+      {
+        "id": "msg-9",
+        "role": "user",
+        "content": "dasda",
+        "analysis": null,
+        "sources": null,
+        "elapsed": null,
+        "error": false,
+        "timestamp": 1785208202.532
+      },
+      {
+        "id": "msg-10",
+        "role": "assistant",
+        "content": "您好！您输入的“dasda”看起来像是一段无意义的测试文字，我暂时无法理解您的具体问题。作为您的烹饪助手，我非常乐意帮助您解答关于菜品的任何疑问。\n\n如果您是随意测试，可以随时提出真实的问题，例如：\n- 想了解某道菜的具体做法（比如Mojito莫吉托、提拉米苏或奇异果菠菜特调）\n- 需要比较不同菜品的难度或时间\n- 对食材清单有疑问（比如提拉米苏食材中出现了菠菜和鸡蛋，这可能是信息错误，需要我帮您核实）\n- 或者任何其他与烹饪相关的咨询\n\n请重新描述您的问题，我会为您提供准确、实用的回答！😊",
+        "analysis": {
+          "recommended_strategy": "hybrid_traditional",
+          "query_complexity": 0,
+          "relationship_intensity": 0,
+          "reasoning_required": false,
+          "entity_count": 0,
+          "confidence": 0.99,
+          "reasoning": "查询'dasda'为无意义字符串，不包含任何实体或语义信息，无需推理或复杂检索，适合最简单的信息查找策略。"
+        },
+        "sources": [
+          {
+            "recipe_name": "Mojito莫吉托",
+            "search_type": "vector_enhanced",
+            "score": 0.01639344262295082,
+            "content_preview": "# Mojito莫吉托\n难度: 3.0星\n\n时间信息: 准备时间: 5分钟, 烹饪时间: 2分钟\n份量: 1杯\n\n相关信息: 三星, Recipe, 饮料"
+          },
+          {
+            "recipe_name": "鸡蛋三明治",
+            "search_type": "vector_enhanced",
+            "score": 0.016129032258064516,
+            "content_preview": "## 标签\n可加芝士,可加酸黄瓜\n相关信息: 黑胡椒, 吐司, 培根"
+          },
+          {
+            "recipe_name": "提拉米苏",
+            "search_type": "vector_enhanced",
+            "score": 0.015873015873015872,
+            "content_preview": "# 提拉米苏\n\n菜系: 意大利\n难度: 4.0星\n\n时间信息: 准备时间: 约20分钟, 烹饪时间: 冷藏4小时\n份量: 1份（按容器大小）\n\n相关信息: 四星, Recipe, 甜品"
+          },
+          {
+            "recipe_name": "菠菜炒鸡蛋",
+            "search_type": "vector_enhanced",
+            "score": 0.015625,
+            "content_preview": "## 所需食材\n1. 菠菜(350g)\n2. 食用油(15ml)\n3. 食用盐(5g)\n4. 鸡蛋(2个)\n\n相关信息: 二星, Recipe, 素菜"
+          },
+          {
+            "recipe_name": "奇异果菠菜特调",
+            "search_type": "vector_enhanced",
+            "score": 0.015384615384615385,
+            "content_preview": "# 奇异果菠菜特调\n难度: 1.0星\n\n时间信息: 准备时间: 5分钟, 烹饪时间: 1分钟\n份量: 1人份\n\n相关信息: 一星, Recipe, 饮料"
+          }
+        ],
+        "elapsed": 7.593490362167358,
+        "error": false,
+        "timestamp": 1785208210.145
       }
     ]
   }

@@ -60,6 +60,20 @@ class RebuildResponse(BaseModel):
     stats: dict
 
 
+class UploadRecipeResponse(BaseModel):
+    """Markdown 菜谱上传响应"""
+
+    success: bool
+    message: str
+    recipe_id: Optional[str] = None
+    recipe_name: Optional[str] = None
+    chunks_created: Optional[int] = None
+    ingredients: Optional[int] = None
+    steps: Optional[int] = None
+    milvus_ok: Optional[bool] = None
+    stats: Optional[dict] = None
+
+
 class ErrorResponse(BaseModel):
     """错误响应"""
 

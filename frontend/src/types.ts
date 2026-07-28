@@ -118,3 +118,16 @@ export interface RecipeDocument {
   content: string
   metadata: Record<string, any>
 }
+
+/** Markdown 菜谱上传响应 */
+export interface UploadRecipeResponse {
+  success: boolean
+  message: string
+  recipe_id?: string
+  recipe_name?: string
+  chunks_created?: number
+  ingredients?: number
+  steps?: number
+  milvus_ok?: boolean
+  stats?: SystemStats
+}
