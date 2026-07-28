@@ -4,10 +4,10 @@ torchvision==0.21.0
 torchaudio==2.6.0
 sentence-transformers>=3.0.0
 
-langchain-core==0.3.71
-langchain-community==0.3.27
-langchain-huggingface==0.3.1
-langchain-text-splitters==0.3.8
+# LangChain 1.x 依赖（项目仅使用 Document 类 + HuggingFace 嵌入）
+langchain-core>=1.4.0,<2.0.0
+langchain>=1.0.0,<2.0.0
+langchain-huggingface>=0.2.0,<2.0.0
 unstructured-client==0.41.0
 neo4j>=5.0.0
 
@@ -20,7 +20,8 @@ huggingface-hub>=0.33.4
 tokenizers>=0.19.0
 accelerate>=0.20.0
 
-openai>=1.86.0,<2.0.0
+# OpenAI SDK（直接用于 DeepSeek API 调用，langchain-openai 1.x 需要 >=2.45.0）
+openai>=2.45.0,<3.0.0
 
 tiktoken>=0.4.0
 
@@ -38,3 +39,11 @@ requests>=2.28.0
 fastapi>=0.110.0
 uvicorn[standard]>=0.27.0
 sse-starlette>=1.6.0
+
+# RAGAS 评估系统（可选：未安装时主应用照常运行，仅评估接口返回 503）
+# 注意：langchain-community>=0.4 把 vertexai 拆到 langchain-google-vertexai，
+# ragas（截至 0.4.3）仍按旧路径导入，必须锁定 <0.4
+ragas>=0.2.0
+langchain-community<0.4
+langchain-openai>=0.4.0,<2.0.0
+python-multipart

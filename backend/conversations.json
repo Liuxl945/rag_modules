@@ -210,5 +210,363 @@
         "timestamp": 1785223180.434
       }
     ]
+  },
+  {
+    "id": "conv-8",
+    "title": "川菜有哪些特色菜？",
+    "created_at": 1785225344.873898,
+    "updated_at": 1785225355.25,
+    "messages": [
+      {
+        "id": "msg-19",
+        "role": "user",
+        "content": "川菜有哪些特色菜？",
+        "analysis": null,
+        "sources": null,
+        "retrieval_trace": null,
+        "elapsed": null,
+        "error": false,
+        "timestamp": 1785225344.881
+      },
+      {
+        "id": "msg-21",
+        "role": "assistant",
+        "content": "根据检索到的信息，川菜中有以下特色菜品推荐：\n\n- **麻婆豆腐**（荤菜，难度3星）：经典川菜，麻辣鲜香，是川菜的代表之一。\n- **酸辣土豆丝**（素菜，难度2星）：家常川菜，酸辣爽口，制作快捷。\n- **凉粉**（素菜，难度3星）：清爽开胃，适合夏季食用。\n- **回锅肉**（荤菜，难度4星）：川菜经典，肥而不腻，口味浓郁。\n\n这些菜品涵盖了荤素不同类别，体现了川菜麻辣、酸辣、鲜香等多样风味。如需了解具体做法，请进一步提问。",
+        "analysis": {
+          "recommended_strategy": "hybrid_traditional",
+          "query_complexity": 0,
+          "relationship_intensity": 0,
+          "reasoning_required": false,
+          "entity_count": 1,
+          "confidence": 0.6,
+          "reasoning": "基于规则的简单分析"
+        },
+        "sources": [
+          {
+            "recipe_name": "麻婆豆腐",
+            "search_type": "dual_level",
+            "search_method": "dual_level",
+            "score": 0.046759212119155104,
+            "final_score": 0.046759212119155104,
+            "content_preview": "菜品名称: 麻婆豆腐\n分类: 荤菜\n菜系: 川菜\n难度: 3.0\n相关信息: 三星, Recipe",
+            "node_id": "201003481",
+            "chunk_id": null,
+            "chunk_index": null,
+            "total_chunks": null,
+            "section_title": null,
+            "rrf_sources": [
+              "dual_level",
+              "vector",
+              "bm25"
+            ],
+            "rrf_ranks": {
+              "dual_level": 1,
+              "vector": 3,
+              "bm25": 9
+            },
+            "rrf_raw_scores": {
+              "dual_level": 0.9,
+              "vector": 0.6052474975585938,
+              "bm25": 5.198885543000431
+            },
+            "bm25_score": null,
+            "vector_score": null,
+            "dual_score": 0.9,
+            "path_length": null,
+            "node_count": null,
+            "relationship_count": null
+          },
+          {
+            "recipe_name": "酸辣土豆丝",
+            "search_type": "vector_enhanced",
+            "search_method": "vector",
+            "score": 0.0454615036704589,
+            "final_score": 0.0454615036704589,
+            "content_preview": "# 酸辣土豆丝\n\n菜系: 川菜\n难度: 2.0星\n\n时间信息: 准备时间: 10分钟, 烹饪时间: 5分钟\n份量: 1人份\n\n相关信息: 二星, Recipe, 素菜",
+            "node_id": "201005195",
+            "chunk_id": "201005195_chunk_1030",
+            "chunk_index": null,
+            "total_chunks": null,
+            "section_title": null,
+            "rrf_sources": [
+              "dual_level",
+              "vector",
+              "bm25"
+            ],
+            "rrf_ranks": {
+              "dual_level": 7,
+              "vector": 5,
+              "bm25": 6
+            },
+            "rrf_raw_scores": {
+              "dual_level": 0.75,
+              "vector": 0.5944603681564331,
+              "bm25": 5.230499112263764
+            },
+            "bm25_score": null,
+            "vector_score": 0.5944603681564331,
+            "dual_score": null,
+            "path_length": null,
+            "node_count": null,
+            "relationship_count": null
+          },
+          {
+            "recipe_name": "凉粉",
+            "search_type": "bm25",
+            "search_method": "bm25",
+            "score": 0.04419642857142857,
+            "final_score": 0.04419642857142857,
+            "content_preview": "# 凉粉\n\n菜系: 川菜\n难度: 3.0星\n\n时间信息: 准备时间: 5分钟, 烹饪时间: 10分钟\n份量: 1人份",
+            "node_id": "201004407",
+            "chunk_id": "201004407_chunk_876",
+            "chunk_index": 0,
+            "total_chunks": 4,
+            "section_title": "主标题",
+            "rrf_sources": [
+              "dual_level",
+              "vector",
+              "bm25"
+            ],
+            "rrf_ranks": {
+              "dual_level": 10,
+              "vector": 10,
+              "bm25": 4
+            },
+            "rrf_raw_scores": {
+              "dual_level": 0.75,
+              "vector": 0.5813827514648438,
+              "bm25": 5.262499507599597
+            },
+            "bm25_score": 5.262499507599597,
+            "vector_score": null,
+            "dual_score": null,
+            "path_length": null,
+            "node_count": null,
+            "relationship_count": null
+          },
+          {
+            "recipe_name": "水煮牛肉",
+            "search_type": "vector_enhanced",
+            "search_method": "vector",
+            "score": 0.03252247488101534,
+            "final_score": 0.03252247488101534,
+            "content_preview": "## 标签\n麻辣鲜香,川菜经典\n相关信息: 三星, Recipe, 荤菜",
+            "node_id": "201002797",
+            "chunk_id": "201002797_chunk_554",
+            "chunk_index": null,
+            "total_chunks": null,
+            "section_title": null,
+            "rrf_sources": [
+              "vector",
+              "bm25"
+            ],
+            "rrf_ranks": {
+              "vector": 1,
+              "bm25": 2
+            },
+            "rrf_raw_scores": {
+              "vector": 0.6169362664222717,
+              "bm25": 5.996199049358088
+            },
+            "bm25_score": null,
+            "vector_score": 0.6169362664222717,
+            "dual_score": null,
+            "path_length": null,
+            "node_count": null,
+            "relationship_count": null
+          },
+          {
+            "recipe_name": "回锅肉",
+            "search_type": "dual_level",
+            "search_method": "dual_level",
+            "score": 0.03055037313432836,
+            "final_score": 0.03055037313432836,
+            "content_preview": "菜品名称: 回锅肉\n分类: 荤菜\n菜系: 川菜\n难度: 4.0\n相关信息: 四星, Recipe",
+            "node_id": "201002350",
+            "chunk_id": null,
+            "chunk_index": null,
+            "total_chunks": null,
+            "section_title": null,
+            "rrf_sources": [
+              "dual_level",
+              "vector"
+            ],
+            "rrf_ranks": {
+              "dual_level": 4,
+              "vector": 7
+            },
+            "rrf_raw_scores": {
+              "dual_level": 0.9,
+              "vector": 0.5936106443405151
+            },
+            "bm25_score": null,
+            "vector_score": null,
+            "dual_score": 0.9,
+            "path_length": null,
+            "node_count": null,
+            "relationship_count": null
+          }
+        ],
+        "retrieval_trace": {
+          "graph_query_plan": null,
+          "graph_paths": [],
+          "channel_stats": {
+            "candidates": {
+              "dual_level": 10,
+              "vector": 10,
+              "bm25": 10
+            },
+            "final": 5,
+            "channels": [
+              "dual_level",
+              "vector",
+              "bm25"
+            ],
+            "contributed": {
+              "dual_level": 4,
+              "vector": 5,
+              "bm25": 4
+            }
+          }
+        },
+        "elapsed": 10.339046955108643,
+        "error": false,
+        "timestamp": 1785225355.25
+      }
+    ]
+  },
+  {
+    "id": "conv-9",
+    "title": "鸡肉配什么蔬菜好？",
+    "created_at": 1785225346.3130088,
+    "updated_at": 1785225369.295,
+    "messages": [
+      {
+        "id": "msg-20",
+        "role": "user",
+        "content": "鸡肉配什么蔬菜好？",
+        "analysis": null,
+        "sources": null,
+        "retrieval_trace": null,
+        "elapsed": null,
+        "error": false,
+        "timestamp": 1785225346.318
+      },
+      {
+        "id": "msg-22",
+        "role": "assistant",
+        "content": "根据您检索到的菜谱（类似口水鸡或麻辣鸡），这道菜本身是凉菜或热菜，重点在于鸡肉的嫩滑和红油的香辣。不过，鸡肉与蔬菜的搭配非常灵活，以下是一些实用的建议，分为**配菜搭配**和**佐餐蔬菜**两类：\n\n---\n\n### 一、作为同一道菜中的配菜（与鸡肉一起烹饪）\n\n如果您希望将蔬菜与鸡肉同煮或同炒，以下蔬菜非常契合这道菜的西北风味和红油调味：\n\n| 蔬菜 | 推荐理由 | 搭配方式 |\n|------|----------|----------|\n| 土豆 | 吸收酱汁，软糯入味，与“可配皮带面”的汤汁很搭 | 切块炖煮，或切条油炸后拌入 |\n| 青椒/红椒 | 增加清脆口感和色彩，解腻 | 切块快炒，或在最后一步撒在鸡肉上 |\n| 洋葱 | 炒香后甜味突出，能提升复合香气 | 切丝或块，与葱段一同炒制 |\n| 香菇/杏鲍菇 | 菌菇的鲜味与鸡肉、红油融合 | 切片焯水或煸炒后拌入 |\n| 豆芽/黄瓜 | 清爽脆嫩，平衡油腻感 | 焯水后垫底，或生黄瓜丝撒在鸡肉上 |\n\n### 二、作为佐餐配菜（单独制作搭配鸡肉）\n\n这道菜的特点是“红油香辣、鸡肉嫩滑”，搭配清淡或微酸的蔬菜能形成味觉平衡，推荐：\n\n- **凉拌菠菜**：焯水后加蒜末、醋、少许盐，清淡解辣。\n- **蒜蓉西兰花**：简单的清炒或白灼，保持蔬菜原味。\n- **糖拌西红柿**：酸甜口感能有效中和辣味。\n- **酸辣土豆丝**：如果喜欢重口味，土豆丝与红油鸡是经典西北组合。\n\n### 三、特别提示（基于您检索到的菜谱）\n\n菜谱中第12步是“鸡肉上撒花生碎，淋红油”，没有加入蔬菜，说明这道菜本身是纯粹的肉食主菜。此时，推荐的蔬菜更建议作为**独立配菜**上桌，避免破坏红油的纯粹风味。如果您想在同一盘中加入蔬菜，可以尝试在**第12步**之前，将焯过水的**豆芽或黄瓜条**铺在盘底，再放上鸡肉、淋红油，这样蔬菜会吸收底部的酱汁，非常美味。\n\n---\n\n**总结**：如果您想保留菜谱原味，建议用**黄瓜、豆芽**做垫底蔬菜；如果想丰富口感，**土豆、青椒、洋葱**是最适合与鸡肉同炖或同炒的蔬菜。",
+        "analysis": {
+          "recommended_strategy": "combined",
+          "query_complexity": 0.5,
+          "relationship_intensity": 0.6,
+          "reasoning_required": false,
+          "entity_count": 2,
+          "confidence": 0.8,
+          "reasoning": "查询涉及鸡肉与蔬菜的搭配关系，属于中等复杂度的实体间关系查询。虽然需要从类别‘蔬菜’中筛选具体选项，但无需多步推理或因果分析，主要依赖食谱知识或营养搭配常识。推荐结合传统检索（获取常见搭配文档）与图结构（捕捉鸡肉与各类蔬菜的营养/口味关系）以获得全面结果。"
+        },
+        "sources": [
+          {
+            "recipe_name": "新疆大盘鸡",
+            "search_type": "bm25",
+            "search_method": "bm25",
+            "score": 0.030679156908665108,
+            "final_score": 0.030679156908665108,
+            "content_preview": "## 标签\n可配皮带面,西北风味,炒糖色,慢炖入味",
+            "node_id": "201002647",
+            "chunk_id": "201002647_chunk_534",
+            "chunk_index": 3,
+            "total_chunks": 4,
+            "section_title": "标签",
+            "rrf_sources": [
+              "vector",
+              "bm25"
+            ],
+            "rrf_ranks": {
+              "vector": 10,
+              "bm25": 1
+            },
+            "rrf_raw_scores": {
+              "vector": 0.5427743196487427,
+              "bm25": 9.059954495806112
+            },
+            "bm25_score": 9.059954495806112,
+            "vector_score": null,
+            "dual_score": null,
+            "path_length": null,
+            "node_count": null,
+            "relationship_count": null
+          },
+          {
+            "recipe_name": "口水鸡",
+            "search_type": "vector_enhanced",
+            "search_method": "vector",
+            "score": 0.030621785881252923,
+            "final_score": 0.030621785881252923,
+            "content_preview": "## 制作步骤\n\n### 第1步\n步骤: 步骤1\n描述: 姜切片，1颗小葱切段，15颗花椒备用\n方法: 切\n工具: 刀,案板\n时间: 2分钟\n\n### 第2步\n步骤: 步骤2\n描述: 鸡肉洗净，放入锅中，加清水没过鸡肉，放入姜片、葱段和花椒，大火烧开\n方法: 煮\n工具: 锅\n时间: 5分钟\n\n### 第3步\n步骤: 步骤3\n描述: 水开后转中小火煮20分钟，关火\n方法: 煮\n工具: 锅\n时间: 20分钟\n\n### 第4步\n步骤: 步骤4\n描述: 取出鸡肉，放入冰水中迅速冷却至冰凉\n方法: 冷却\n工具: 盆,冰水\n时间: 5分钟\n\n### 第5步\n步骤: 步骤5\n描述: 取出鸡肉，切块摆盘备用\n",
+            "node_id": "201002255",
+            "chunk_id": "201002255_chunk_465",
+            "chunk_index": null,
+            "total_chunks": null,
+            "section_title": null,
+            "rrf_sources": [
+              "vector",
+              "bm25"
+            ],
+            "rrf_ranks": {
+              "vector": 2,
+              "bm25": 9
+            },
+            "rrf_raw_scores": {
+              "vector": 0.5702293515205383,
+              "bm25": 6.29790596040803
+            },
+            "bm25_score": null,
+            "vector_score": 0.5702293515205383,
+            "dual_score": null,
+            "path_length": null,
+            "node_count": null,
+            "relationship_count": null
+          }
+        ],
+        "retrieval_trace": {
+          "graph_query_plan": {
+            "query_type": "multi_hop",
+            "source_entities": [
+              "鸡肉"
+            ],
+            "target_entities": [
+              "蔬菜"
+            ],
+            "relation_types": [
+              "REQUIRES"
+            ],
+            "max_depth": 2
+          },
+          "graph_paths": [],
+          "channel_stats": {
+            "candidates": {
+              "dual_level": 0,
+              "vector": 10,
+              "bm25": 10
+            },
+            "final": 2,
+            "channels": [
+              "dual_level",
+              "vector",
+              "bm25"
+            ],
+            "contributed": {
+              "dual_level": 0,
+              "vector": 2,
+              "bm25": 2
+            }
+          }
+        },
+        "elapsed": 22.969719648361206,
+        "error": false,
+        "timestamp": 1785225369.295
+      }
+    ]
   }
 ]

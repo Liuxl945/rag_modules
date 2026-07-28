@@ -43,6 +43,7 @@ onMounted(() => {
         <el-menu-item index="/">聊天</el-menu-item>
         <el-menu-item index="/browse">菜谱</el-menu-item>
         <el-menu-item index="/stats">统计</el-menu-item>
+        <el-menu-item index="/evaluation">评估</el-menu-item>
       </el-menu>
       <el-tag :type="statusType" effect="dark" class="status-tag">
         {{ statusText }}

@@ -216,3 +216,64 @@ export interface UploadRecipeResponse {
   milvus_ok?: boolean
   stats?: SystemStats
 }
+
+// ---------------------------------------------------------------------------
+// RAGAS 评估
+// ---------------------------------------------------------------------------
+
+/** 内置测试集条目 */
+export interface EvaluationDatasetItem {
+  id: string
+  question: string
+  ground_truth: string
+  category?: string | null
+}
+
+/** 指标列名 -> 得分（null 表示该指标未跑或单样本异常） */
+export type EvaluationScores = Record<string, number | null>
+
+/** 单样本评估结果（question + 各指标得分） */
+export interface EvaluationSampleResult {
+  question: string
+  [metric: string]: string | number | null
+}
+
+/** 测试集评估运行完整结果 */
+export interface EvaluationRunResult {
+  run_id: string
+  results: EvaluationSampleResult[]
+  aggregates: EvaluationScores
+  metrics: string[]
+  count: number
+  elapsed?: number | null
+  skipped: number
+}
+
+/** 单条评估响应 */
+export interface EvaluationSingleResponse {
+  scores: EvaluationScores
+  metrics: string[]
+  count: number
+  elapsed?: number | null
+}
+
+/** 会话消息评估响应（含回填的问题） */
+export interface MessageEvaluationResponse extends EvaluationSingleResponse {
+  question: string
+}
+
+/** 评估运行元数据（列表项，不含 results 全文） */
+export interface EvaluationRunSummary {
+  id: string
+  created_at: number
+  kind: string
+  count: number
+  metrics: string[]
+  aggregates: EvaluationScores
+  elapsed?: number | null
+}
+
+/** 评估依赖可用性 */
+export interface EvaluationStatus {
+  available: boolean
+}

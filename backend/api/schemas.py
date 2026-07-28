@@ -182,3 +182,72 @@ class ConversationRenameRequest(BaseModel):
     """重命名会话"""
 
     title: str = Field(..., min_length=1, description="新标题")
+
+
+# ---------------------------------------------------------------------------
+# RAGAS 评估
+# ---------------------------------------------------------------------------
+class EvaluationSampleIn(BaseModel):
+    """手动单条评估输入"""
+
+    question: str = Field(..., min_length=1, description="用户问题")
+    answer: str = Field(..., description="待评估的回答")
+    contexts: List[str] = Field(default_factory=list, description="检索上下文片段列表")
+    ground_truth: Optional[str] = Field(None, description="参考答案（提供则跑完整 4 指标）")
+
+
+class EvaluationSingleResponse(BaseModel):
+    """单条评估响应（scores 为 指标列名 -> 得分）"""
+
+    scores: Dict[str, Optional[float]] = {}
+    metrics: List[str] = []
+    count: int = 1
+    elapsed: Optional[float] = None
+
+
+class MessageEvaluationRequest(BaseModel):
+    """评估会话中的某条问答（重新检索取完整 contexts）"""
+
+    conversation_id: str = Field(..., description="会话 ID")
+    message_id: str = Field(..., description="助手消息 ID")
+
+
+class EvaluationRunRequest(BaseModel):
+    """运行测试集评估（questions 留空用内置测试集）"""
+
+    questions: Optional[List[str]] = Field(
+        None, description="自定义问题列表；留空则用内置烹饪测试集"
+    )
+
+
+class EvaluationRunResponse(BaseModel):
+    """测试集评估响应"""
+
+    run_id: str
+    results: List[dict] = []
+    aggregates: Dict[str, Optional[float]] = {}
+    metrics: List[str] = []
+    count: int = 0
+    elapsed: Optional[float] = None
+    skipped: int = 0
+
+
+class EvaluationRunSummary(BaseModel):
+    """评估运行元数据（列表项，不含 results 全文）"""
+
+    id: str
+    created_at: float
+    kind: str
+    count: int = 0
+    metrics: List[str] = []
+    aggregates: Dict[str, Optional[float]] = {}
+    elapsed: Optional[float] = None
+
+
+class EvaluationDatasetItem(BaseModel):
+    """内置测试集条目"""
+
+    id: str
+    question: str
+    ground_truth: str
+    category: Optional[str] = None

@@ -12,6 +12,12 @@ import type {
   RecipeListItem,
   RecipeDocument,
   UploadRecipeResponse,
+  EvaluationDatasetItem,
+  EvaluationRunResult,
+  EvaluationSingleResponse,
+  MessageEvaluationResponse,
+  EvaluationRunSummary,
+  EvaluationStatus,
 } from '@/types'
 
 const http = axios.create({
@@ -136,4 +142,75 @@ export async function renameConversation(id: string, title: string): Promise<Con
 /** 删除会话 */
 export async function deleteConversation(id: string): Promise<void> {
   await http.delete(`/conversations/${id}`)
+}
+
+// ---------------------------------------------------------------------------
+// RAGAS 评估
+// ---------------------------------------------------------------------------
+
+/** 评估依赖可用性（RAGAS 是否已安装） */
+export async function getEvaluationStatus(): Promise<EvaluationStatus> {
+  const { data } = await http.get<EvaluationStatus>('/evaluation/status')
+  return data
+}
+
+/** 内置烹饪评估测试集 */
+export async function getEvaluationDataset(): Promise<EvaluationDatasetItem[]> {
+  const { data } = await http.get<{ dataset: EvaluationDatasetItem[] }>('/evaluation/dataset')
+  return data.dataset
+}
+
+/** 手动单条评估：question / answer / contexts / ground_truth(可选) */
+export async function evaluateSingle(payload: {
+  question: string
+  answer: string
+  contexts?: string[]
+  ground_truth?: string
+}): Promise<EvaluationSingleResponse> {
+  const { data } = await http.post<EvaluationSingleResponse>('/evaluation/single', payload, {
+    timeout: 300000, // 5 分钟
+  })
+  return data
+}
+
+/** 评估会话中的某条助手问答（重新检索取完整 contexts） */
+export async function evaluateMessage(
+  conversationId: string,
+  messageId: string,
+): Promise<MessageEvaluationResponse> {
+  const { data } = await http.post<MessageEvaluationResponse>(
+    '/evaluation/message',
+    { conversation_id: conversationId, message_id: messageId },
+    { timeout: 300000 },
+  )
+  return data
+}
+
+/** 运行测试集评估（重，可能数分钟）；questions 留空用内置测试集 */
+export async function runEvaluation(questions?: string[]): Promise<EvaluationRunResult> {
+  const { data } = await http.post<EvaluationRunResult>(
+    '/evaluation/run',
+    { questions },
+    { timeout: 600000 }, // 10 分钟
+  )
+  return data
+}
+
+/** 历史评估运行列表（元数据） */
+export async function listEvaluationResults(): Promise<EvaluationRunSummary[]> {
+  const { data } = await http.get<{ results: EvaluationRunSummary[] }>('/evaluation/results')
+  return data.results
+}
+
+/** 单次评估运行详情（含每样本 results） */
+export async function getEvaluationResult(runId: string): Promise<EvaluationRunResult> {
+  const { data } = await http.get<{ result: EvaluationRunResult }>(
+    `/evaluation/results/${runId}`,
+  )
+  return data.result
+}
+
+/** 删除一次评估记录 */
+export async function deleteEvaluationResult(runId: string): Promise<void> {
+  await http.delete(`/evaluation/results/${runId}`)
 }

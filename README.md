@@ -7,13 +7,14 @@ rag_modules/
 ├── backend/          后端工程（FastAPI + 原 RAG 引擎）
 │   ├── app.py        FastAPI 入口（Web 服务）
 │   ├── main.py       AdvancedGraphRAGSystem 编排层（保留 CLI 入口）
-│   ├── api/          Web API 层（路由 / Schema / 状态）
+│   ├── api/          Web API 层（路由 / Schema / 状态 / 会话 / 评估）
 │   ├── config.py     系统配置
-│   ├── rag_modules/  核心 RAG 模块（数据/索引/检索/路由/生成）
+│   ├── rag_modules/  核心 RAG 模块（数据/索引/检索/路由/生成/评估）
+│   ├── data/         评估测试集（eval_dataset.json）
 │   └── requirements.txt
 └── frontend/         前端工程（Vue3 + Vite + Element Plus）
     └── src/
-        ├── views/      聊天页 / 统计页
+        ├── views/      聊天页 / 菜谱浏览 / 统计页 / 评估页
         ├── components/ 消息 / 输入 / 来源 / 分析标签
         ├── api/        接口封装
         ├── utils/      SSE 流式客户端 / markdown 渲染
@@ -57,5 +58,38 @@ npm run dev
 | POST | `/api/query` | 非流式问答 |
 | POST | `/api/query/stream` | SSE 流式问答（逐 token） |
 | POST | `/api/knowledge-base/rebuild` | 重建知识库 |
+| GET | `/api/evaluation/status` | RAGAS 评估依赖是否可用 |
+| GET | `/api/evaluation/dataset` | 内置烹饪评估测试集 |
+| POST | `/api/evaluation/single` | 手动单条评估（question/answer/contexts[/ground_truth]） |
+| POST | `/api/evaluation/message` | 评估会话中的某条问答（重新检索完整上下文） |
+| POST | `/api/evaluation/run` | 运行测试集评估（完整 RAG 管线 + RAGAS） |
+| GET | `/api/evaluation/results` | 历史评估列表 |
+| GET | `/api/evaluation/results/{id}` | 单次评估详情 |
+| DELETE | `/api/evaluation/results/{id}` | 删除评估记录 |
+
+## RAGAS 评估
+
+系统内置 [RAGAS](https://github.com/explodinggradients/ragas) 评估能力，量化 RAG 管线质量，复用现有 DeepSeek LLM + BGE 向量。
+
+**四项核心指标：**
+- **忠实度（Faithfulness）**：答案是否可由检索上下文支持（无幻觉），无需参考答案
+- **答案相关性（ResponseRelevancy）**：答案是否切题
+- **上下文召回率（ContextRecall）**：参考答案是否都能被检索上下文覆盖（需参考答案）
+- **上下文精确率（ContextPrecision）**：相关检索项是否排在前面（需参考答案）
+
+**两个入口（前端「评估」页）：**
+- 测试集评估：对内置 8 条烹饪 Q&A 测试集（带参考答案）跑完整 RAG 管线 + 4 项指标，输出聚合均值 + 每样本明细
+- 单条评估：从会话历史选一条助手回答评估，或手动粘贴 question/answer/contexts 评估
+
+**可选依赖（不影响主应用）：**
+
+```bash
+cd backend
+pip install ragas langchain-openai
+```
+
+RAGAS 为**可选依赖**：未安装时主应用与聊天/检索功能照常运行，仅评估接口返回 503 + 安装提示（前端评估页顶部会显示提示横幅）。
+
+> judge 模型默认用系统 LLM，可用 `RAGAS_JUDGE_MODEL` 环境变量切换；并发数用 `RAGAS_MAX_WORKERS`（默认 3）。
 
 > 后端 RAG 引擎与模块细节见 [backend/README.md](backend/README.md)。

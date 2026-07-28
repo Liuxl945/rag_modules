@@ -19,6 +19,8 @@ from sse_starlette.sse import EventSourceResponse
 
 from .state import state
 from .chat_history import conversation_store
+from .evaluation_store import evaluation_store
+from rag_modules.evaluation import ragas_available
 from .schemas import (
     QueryRequest,
     QueryResponse,
@@ -31,6 +33,9 @@ from .schemas import (
     ConversationCreateRequest,
     MessageCreateRequest,
     ConversationRenameRequest,
+    EvaluationSampleIn,
+    EvaluationRunRequest,
+    MessageEvaluationRequest,
 )
 
 logger = logging.getLogger(__name__)
@@ -371,4 +376,179 @@ async def delete_conversation(conv_id: str):
     ok = conversation_store.delete_conversation(conv_id)
     if not ok:
         raise HTTPException(status_code=404, detail="会话不存在")
+    return {"ok": True}
+
+
+# ---------------------------------------------------------------------------
+# RAGAS 评估
+#   GET  /api/evaluation/status        评估依赖可用性
+#   GET  /api/evaluation/dataset       内置测试集
+#   POST /api/evaluation/single        手动单条评估
+#   POST /api/evaluation/message       评估会话中的某条问答
+#   POST /api/evaluation/run           运行测试集评估（重，线程池）
+#   GET  /api/evaluation/results      历史评估列表
+#   GET  /api/evaluation/results/{id} 单次评估详情
+#   DELETE /api/evaluation/results/{id} 删除一次评估
+# ---------------------------------------------------------------------------
+@router.get("/evaluation/status")
+async def evaluation_status():
+    """返回 RAGAS 依赖是否可用（前端据此显示安装提示横幅）。"""
+    return {"available": ragas_available()}
+
+
+@router.get("/evaluation/dataset")
+async def evaluation_dataset():
+    """返回内置烹饪评估测试集（question + ground_truth）。"""
+    system = _require_system()
+    try:
+        items = await asyncio.to_thread(system.evaluation_module.load_eval_dataset)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    return {"dataset": items}
+
+
+@router.post("/evaluation/single")
+async def evaluation_single(req: EvaluationSampleIn):
+    """手动单条评估：提供 question/answer/contexts[/ground_truth] -> RAGAS 指标。"""
+    system = _require_system()
+    start = time.time()
+    try:
+        res = await asyncio.to_thread(
+            system.evaluation_module.evaluate_single,
+            req.question, req.answer, req.contexts, req.ground_truth,
+        )
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    except Exception as e:
+        logger.exception("单条评估失败")
+        raise HTTPException(status_code=500, detail=f"评估失败：{e}")
+
+    scores = {}
+    if res.get("results"):
+        scores = {k: v for k, v in res["results"][0].items() if k != "question"}
+    return {
+        "scores": scores,
+        "metrics": res.get("metrics", []),
+        "count": res.get("count", 1),
+        "elapsed": round(time.time() - start, 2),
+    }
+
+
+@router.post("/evaluation/message")
+async def evaluation_message(req: MessageEvaluationRequest):
+    """评估会话中的某条助手问答：重新检索取完整 contexts，用存储的 answer 评估。"""
+    system = _require_system()
+    conv = conversation_store.get_conversation(req.conversation_id)
+    if conv is None:
+        raise HTTPException(status_code=404, detail="会话不存在")
+
+    # 定位助手消息 + 其前最近一条 user 消息作为问题
+    messages = conv.get("messages") or []
+    idx = None
+    for i, m in enumerate(messages):
+        if m.get("id") == req.message_id:
+            idx = i
+            break
+    if idx is None:
+        raise HTTPException(status_code=404, detail="消息不存在")
+    answer_msg = messages[idx]
+    if answer_msg.get("role") != "assistant":
+        raise HTTPException(status_code=400, detail="只能评估助手回答消息")
+    answer = answer_msg.get("content", "")
+    question = ""
+    for j in range(idx - 1, -1, -1):
+        if messages[j].get("role") == "user":
+            question = messages[j].get("content", "")
+            break
+    if not question:
+        raise HTTPException(status_code=400, detail="未找到该回答对应的问题")
+
+    start = time.time()
+    try:
+        res = await asyncio.to_thread(system.evaluate_message, question, answer)
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    except Exception as e:
+        logger.exception("会话消息评估失败")
+        raise HTTPException(status_code=500, detail=f"评估失败：{e}")
+
+    scores = {}
+    if res.get("results"):
+        scores = {k: v for k, v in res["results"][0].items() if k != "question"}
+    return {
+        "question": question,
+        "scores": scores,
+        "metrics": res.get("metrics", []),
+        "count": res.get("count", 1),
+        "elapsed": round(time.time() - start, 2),
+    }
+
+
+@router.post("/evaluation/run")
+async def evaluation_run(req: EvaluationRunRequest):
+    """运行测试集评估：每条跑完整 RAG 管线后 RAGAS，结果落盘并返回。"""
+    system = _require_system()
+
+    # 构造评估项：自定义问题（无 gt）或内置测试集（有 gt）
+    if req.questions:
+        items = [{"question": q} for q in req.questions]
+    else:
+        items = await asyncio.to_thread(system.evaluation_module.load_eval_dataset)
+    if not items:
+        raise HTTPException(status_code=400, detail="没有可评估的样本")
+
+    try:
+        res = await asyncio.to_thread(system.run_dataset_evaluation, items)
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    except Exception as e:
+        logger.exception("测试集评估失败")
+        raise HTTPException(status_code=500, detail=f"评估失败：{e}")
+
+    # 落盘
+    kind = "dataset"
+    run = evaluation_store.save_run(
+        kind=kind,
+        results=res.get("results", []),
+        aggregates=res.get("aggregates", {}),
+        metrics=res.get("metrics", []),
+        elapsed=res.get("elapsed"),
+        extra={"skipped": res.get("skipped", 0)},
+    )
+    return {
+        "run_id": run["id"],
+        "results": run["results"],
+        "aggregates": run["aggregates"],
+        "metrics": run["metrics"],
+        "count": run["count"],
+        "elapsed": run["elapsed"],
+        "skipped": res.get("skipped", 0),
+    }
+
+
+@router.get("/evaluation/results")
+async def evaluation_results():
+    """返回历史评估运行列表（元数据，按时间倒序）。"""
+    return {"results": evaluation_store.list_runs()}
+
+
+@router.get("/evaluation/results/{run_id}")
+async def evaluation_result_detail(run_id: str):
+    """返回单次评估运行详情（含每样本 results）。"""
+    run = evaluation_store.get_run(run_id)
+    if run is None:
+        raise HTTPException(status_code=404, detail="评估记录不存在")
+    return {"result": run}
+
+
+@router.delete("/evaluation/results/{run_id}")
+async def evaluation_result_delete(run_id: str):
+    """删除一次评估记录。"""
+    ok = evaluation_store.delete_run(run_id)
+    if not ok:
+        raise HTTPException(status_code=404, detail="评估记录不存在")
     return {"ok": True}

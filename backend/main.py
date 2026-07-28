@@ -48,7 +48,8 @@ from config import DEFAULT_CONFIG, GraphRAGConfig
 from rag_modules import (
     GraphDataPreparationModule,
     MilvusIndexConstructionModule,
-    GenerationIntegrationModule
+    GenerationIntegrationModule,
+    RAGASEvaluationModule
 )
 from rag_modules.hybrid_retrieval import HybridRetrievalModule
 from rag_modules.graph_rag_retrieval import GraphRAGRetrieval
@@ -95,6 +96,9 @@ class AdvancedGraphRAGSystem:
         self.traditional_retrieval = None  # 传统混合检索
         self.graph_rag_retrieval = None    # 图 RAG 检索
         self.query_router = None           # 智能路由器
+
+        # 评估引擎（懒加载 ragas/LLM/embeddings，启动零成本）
+        self.evaluation_module = None     # RAGAS 评估模块
 
         # 系统状态：标记知识库是否已就绪（可接受查询）
         self.system_ready = False
@@ -167,6 +171,10 @@ class AdvancedGraphRAGSystem:
                 llm_client=self.generation_module.client,          # 复用 LLM 客户端
                 config=self.config
             )
+
+            # 7. RAGAS 评估引擎：仅存配置，ragas/LLM/embeddings 懒加载（首次评估才初始化）
+            print("初始化RAGAS评估引擎...")
+            self.evaluation_module = RAGASEvaluationModule(self.config)
 
             print("✅ 高级图RAG系统初始化完成！")
 
@@ -413,6 +421,78 @@ class AdvancedGraphRAGSystem:
             raise ValueError("系统未就绪，请先构建知识库")
 
         return self.query_router.route_query(question, top_k or self.config.top_k)
+
+    def run_dataset_evaluation(self, items: List) -> dict:
+        """对测试集跑完整 RAG 管线 + RAGAS 评估（供 Web API 调用）。
+
+        对每条 item（question + ground_truth）：路由检索 -> 生成答案 -> 取 contexts，
+        收集后一次性 RAGAS 评估（有 ground_truth，跑完整 4 指标）。
+
+        Args:
+            items: [{question, ground_truth, ...}]，ground_truth 可空（空则该条跳过需 gt 的指标）
+
+        Returns:
+            {results, aggregates, count, metrics, elapsed, skipped}
+        """
+        if not self.system_ready:
+            raise ValueError("系统未就绪，请先构建知识库")
+        if self.evaluation_module is None:
+            raise RuntimeError("评估引擎未初始化")
+
+        start = time.time()
+        samples = []
+        skipped = 0
+        for it in items:
+            q = (it.get("question") or "").strip() if isinstance(it, dict) else ""
+            gt = it.get("ground_truth") if isinstance(it, dict) else None
+            if not q:
+                skipped += 1
+                continue
+            # 跑完整 RAG 管线：路由检索 -> 生成答案
+            documents, _ = self.query_router.route_query(q, self.config.top_k)
+            if not documents:
+                answer = "（无检索结果）"
+                contexts = []
+            else:
+                answer = self.generation_module.generate_adaptive_answer(q, documents)
+                contexts = [d.page_content.strip() for d in documents if d.page_content.strip()]
+            samples.append({
+                "question": q,
+                "answer": answer,
+                "contexts": contexts,
+                "ground_truth": gt,
+            })
+
+        result = self.evaluation_module.evaluate(
+            samples,
+            # 全部样本都有 ground_truth 才跑完整 4 指标；否则仅忠实度 + 相关性
+            with_reference=bool(samples) and all(s.get("ground_truth") for s in samples),
+        )
+        result["elapsed"] = round(time.time() - start, 2)
+        result["skipped"] = skipped
+        return result
+
+    def evaluate_message(self, question: str, answer: str) -> dict:
+        """对一条存储的问答做在线评估（供 Web API 调用）。
+
+        重新检索取完整 page_content 作为 contexts（存储的 sources 仅有 300 字预览），
+        用存储的 answer 评估。无 ground_truth -> 仅忠实度 + 答案相关性。
+
+        Args:
+            question: 原问题
+            answer: 存储的助手回答
+
+        Returns:
+            {results, aggregates, count, metrics}
+        """
+        if not self.system_ready:
+            raise ValueError("系统未就绪，请先构建知识库")
+        if self.evaluation_module is None:
+            raise RuntimeError("评估引擎未初始化")
+
+        documents, _ = self.query_router.route_query(question, self.config.top_k)
+        contexts = [d.page_content.strip() for d in documents if d.page_content.strip()]
+        return self.evaluation_module.evaluate_single(question, answer, contexts, ground_truth=None)
 
     @staticmethod
     def analysis_to_dict(analysis) -> dict:
