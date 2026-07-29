@@ -861,11 +861,21 @@ class GraphRAGRetrieval:
         """
         documents = []
 
-        # 空结果防御：图查询未匹配到任何节点时不生成 Document，
+        # 空结果防御：图查询未匹配到任何有意义的节点/关系时不生成 Document，
         # 否则会产生"关于  的知识网络，包含 0 个..."之类的空壳上下文，
-        # 既占用 top_k 名额又干扰 LLM 判断。
+        # 既占用 top_k 名额又干扰 LLM 判断。三种"空"都要拦：
+        #   1. 没有中心节点也没有连通节点
+        #   2. 中心节点全是无名节点（name 为空）且没有连通节点/关系（会渲染出双空格空壳）
+        #   3. 完全没有连通节点也没有关系（central 有名但孤立，同样不构成"网络"）
+        has_named_central = any((n.get("name") or "").strip() for n in subgraph.central_nodes)
         if not subgraph.central_nodes and not subgraph.connected_nodes:
             logger.info("子图为空（无中心/连通节点），跳过 Document 生成")
+            return documents
+        if not has_named_central and not subgraph.connected_nodes and not subgraph.relationships:
+            logger.info("子图仅含匿名中心节点且无连通/关系，跳过 Document 生成")
+            return documents
+        if not subgraph.connected_nodes and not subgraph.relationships:
+            logger.info("子图无任何连通节点/关系，跳过 Document 生成（避免空壳描述）")
             return documents
 
         # 构建子图整体的自然语言描述

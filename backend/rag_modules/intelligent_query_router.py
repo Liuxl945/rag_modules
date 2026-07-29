@@ -193,7 +193,7 @@ class IntelligentQueryRouter:
             response = self.llm_client.chat.completions.create(
                 model=self.config.llm_model,
                 messages=[{"role": "user", "content": analysis_prompt}],
-                temperature=0.1,  # 低温度确保分析结果稳定
+                temperature=0,  # 温度 0：同一问题必须产出同一策略，避免路由抖动导致 eval 与在线检索结果不一致
                 max_tokens=800
             )
 
@@ -298,6 +298,11 @@ class IntelligentQueryRouter:
                 # 图 RAG 检索：多跳遍历 + 子图提取 + 图结构推理
                 logger.info("🕸️ 使用图RAG检索")
                 documents = self.graph_rag_retrieval.graph_rag_search(query, top_k)
+                # 图 RAG 兜底：抽不到实体/子图为空时会返回 []，此时降级到传统混合检索，
+                # 避免出现"策略选了图但结果空"的极端情况（评估路径尤其明显）。
+                if not documents:
+                    logger.warning("图RAG 返回空结果，fallback 到传统混合检索")
+                    documents = self.traditional_retrieval.hybrid_search(query, top_k)
 
             elif analysis.recommended_strategy == SearchStrategy.COMBINED:
                 # 组合策略：两种策略 Round-robin 交替融合
