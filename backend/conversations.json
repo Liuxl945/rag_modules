@@ -357,5 +357,1139 @@
         "timestamp": 1785298613.786
       }
     ]
+  },
+  {
+    "id": "conv-15",
+    "title": "红烧肉怎么做？",
+    "created_at": 1785311110.078107,
+    "updated_at": 1785317521.463,
+    "messages": [
+      {
+        "id": "msg-35",
+        "role": "user",
+        "content": "红烧肉怎么做？",
+        "analysis": null,
+        "sources": null,
+        "retrieval_trace": null,
+        "elapsed": null,
+        "error": false,
+        "timestamp": 1785311110.091
+      },
+      {
+        "id": "msg-36",
+        "role": "assistant",
+        "content": "红烧肉是一道经典的家常菜，根据地域和口味偏好，做法略有不同。以下汇总了四种常见风格的红烧肉做法，你可以根据自己的时间、难度和口味选择：\n\n### 1. 简易红烧肉（适合新手，耗时约115分钟）\n- **难度**：★★★☆☆\n- **份量**：2-3人\n- **关键步骤**：\n  1. 五花肉切块，冷水下锅焯水15分钟，捞出洗净。\n  2. 锅中少油，煎至两面微黄，逼出多余油脂。\n  3. 加入葱姜、八角、桂皮、冰糖，炒出糖色后加生抽、老抽、料酒。\n  4. 倒入开水没过肉，转小火炖煮80分钟，最后大火收汁。\n- **贴士**：时间较长但操作简单，适合第一次尝试。\n\n### 2. 南派红烧肉（讲究火候与糖色，耗时约110-130分钟）\n- **难度**：★★★★☆\n- **份量**：1-3人\n- **关键步骤**：\n  1. 五花肉焯水15分钟后切块（先焯后切更定型）。\n  2. 锅中放少量油，小火炒冰糖至枣红色（注意不要炒苦）。\n  3. 放入肉块快速翻炒上色，加姜片、八角、桂皮、料酒、生抽、老抽。\n  4. 加开水小火炖煮50-60分钟，最后开盖收汁10-15分钟。\n- **贴士**：糖色是灵魂，收汁要勤翻动防粘锅。\n\n### 3. 徽派红烧肉（快手版，耗时约40分钟）\n- **难度**：★★★★☆\n- **份量**：1份\n- **关键步骤**：\n  1. 五花肉切块，无需焯水，直接下锅煸炒至出油微黄。\n  2. 加入冰糖、酱油、八角、桂皮、姜片，翻炒上色。\n  3. 倒入少量开水（刚没过肉），大火烧开后转小火焖30分钟。\n  4. 最后大火收汁（约5分钟）。\n- **特点**：烹饪时间短，肉块较小，口感偏干香，讲究原汁原味。\n\n### 4. 湖南家常红烧肉（加辣增味，耗时约55分钟）\n- **难度**：★★★☆☆\n- **份量**：2人\n- **关键步骤**：\n  1. 五花肉切块，冷水下锅焯水去血沫（约10分钟）。\n  2. 锅中煸炒至表面微焦，加入豆瓣酱、姜蒜、干辣椒炒出红油。\n  3. 加生抽、老抽、料酒、冰糖，翻炒均匀后加开水。\n  4. 小火炖煮30分钟，最后大火收汁（约5分钟）。\n- **贴士**：可按喜好加番茄酱提鲜，或加入煮熟的去壳鸡蛋一起炖，做成卤蛋。\n\n---\n\n### 💡 通用小建议（适合所有做法）\n- **选肉**：首选带皮五花肉，肥瘦相间约3层。\n- **焯水**：冷水下锅，加姜片、料酒，去腥更彻底。\n- **加水**：一定要用**开水**，冷水会让肉质变柴。\n- **火候**：炖煮全程小火，最后收汁用中大火，不断翻动防粘。\n- **灵活调整**：可加入豆干、百叶结、鸡蛋等一起炖，营养更丰富。\n\n如果你有具体喜好（比如口味偏甜、偏辣，或时间紧张），可以告诉我，我帮你推荐最合适的一款做法！",
+        "analysis": {
+          "recommended_strategy": "hybrid_traditional",
+          "query_complexity": 0.3,
+          "relationship_intensity": 0.3,
+          "reasoning_required": false,
+          "entity_count": 1,
+          "confidence": 0.9,
+          "reasoning": "查询'红烧肉怎么做？'属于菜谱类简单信息查找，核心实体只有'红烧肉'一个，关系密集度低，无需多跳推理或因果分析，适合基于传统检索的混合策略，利用结构化菜谱或文本段落直接提取步骤信息。"
+        },
+        "sources": [
+          {
+            "recipe_name": "简易红烧肉",
+            "search_type": "bm25",
+            "search_method": "bm25",
+            "score": 0.7219945268314873,
+            "final_score": 0.7219945268314873,
+            "content_preview": "# 简易红烧肉\n难度: 3.0星\n\n时间信息: 准备时间: 约20分钟（切肉、焯水、准备配料）, 烹饪时间: 约95分钟（焯水15分钟+煎肉+炖煮80分钟）\n份量: 2-3人",
+            "node_id": "201003002",
+            "chunk_id": "201003002_chunk_591",
+            "chunk_index": 0,
+            "total_chunks": 4,
+            "section_title": "主标题",
+            "rrf_sources": [
+              "bm25"
+            ],
+            "rrf_ranks": {
+              "bm25": 6
+            },
+            "rrf_raw_scores": {
+              "bm25": 7.359248815525155
+            },
+            "bm25_score": 7.359248815525155,
+            "vector_score": null,
+            "dual_score": null,
+            "rerank_score": 0.7219945268314873,
+            "reranked": true,
+            "path_length": null,
+            "node_count": null,
+            "relationship_count": null
+          },
+          {
+            "recipe_name": "南派红烧肉",
+            "search_type": "bm25",
+            "search_method": "bm25",
+            "score": 0.7127287336623294,
+            "final_score": 0.7127287336623294,
+            "content_preview": "# 南派红烧肉\n难度: 4.0星\n\n时间信息: 准备时间: 约20分钟（切肉、切配料、焯水准备）, 烹饪时间: 约90-110分钟（焯水15分钟+炒糖色与炖煮50-60分钟+收汁10-15分钟）\n份量: 1-3人",
+            "node_id": "201002978",
+            "chunk_id": "201002978_chunk_587",
+            "chunk_index": 0,
+            "total_chunks": 4,
+            "section_title": "主标题",
+            "rrf_sources": [
+              "bm25"
+            ],
+            "rrf_ranks": {
+              "bm25": 10
+            },
+            "rrf_raw_scores": {
+              "bm25": 6.949265047323629
+            },
+            "bm25_score": 6.949265047323629,
+            "vector_score": null,
+            "dual_score": null,
+            "rerank_score": 0.7127287336623294,
+            "reranked": true,
+            "path_length": null,
+            "node_count": null,
+            "relationship_count": null
+          },
+          {
+            "recipe_name": "徽派红烧肉",
+            "search_type": "bm25",
+            "search_method": "bm25",
+            "score": 0.675772776389765,
+            "final_score": 0.675772776389765,
+            "content_preview": "# 徽派红烧肉\n\n菜系: 徽菜\n难度: 4.0星\n\n时间信息: 准备时间: 约5分钟（切肉、备料）, 烹饪时间: 约35分钟\n份量: 1份",
+            "node_id": "201002627",
+            "chunk_id": "201002627_chunk_527",
+            "chunk_index": 0,
+            "total_chunks": 4,
+            "section_title": "主标题",
+            "rrf_sources": [
+              "bm25"
+            ],
+            "rrf_ranks": {
+              "bm25": 2
+            },
+            "rrf_raw_scores": {
+              "bm25": 8.003098557135884
+            },
+            "bm25_score": 8.003098557135884,
+            "vector_score": null,
+            "dual_score": null,
+            "rerank_score": 0.675772776389765,
+            "reranked": true,
+            "path_length": null,
+            "node_count": null,
+            "relationship_count": null
+          },
+          {
+            "recipe_name": "湖南家常红烧肉",
+            "search_type": "bm25",
+            "search_method": "bm25",
+            "score": 0.6720375100512235,
+            "final_score": 0.6720375100512235,
+            "content_preview": "# 湖南家常红烧肉\n\n菜系: 湘菜\n难度: 3.0星\n\n时间信息: 准备时间: 约10分钟, 烹饪时间: 约45分钟\n份量: 2人",
+            "node_id": "201002837",
+            "chunk_id": "201002837_chunk_559",
+            "chunk_index": 0,
+            "total_chunks": 4,
+            "section_title": "主标题",
+            "rrf_sources": [
+              "bm25"
+            ],
+            "rrf_ranks": {
+              "bm25": 1
+            },
+            "rrf_raw_scores": {
+              "bm25": 8.194273165395632
+            },
+            "bm25_score": 8.194273165395632,
+            "vector_score": null,
+            "dual_score": null,
+            "rerank_score": 0.6720375100512235,
+            "reranked": true,
+            "path_length": null,
+            "node_count": null,
+            "relationship_count": null
+          },
+          {
+            "recipe_name": "酱排骨",
+            "search_type": "bm25",
+            "search_method": "bm25",
+            "score": 0.5266738191468318,
+            "final_score": 0.5266738191468318,
+            "content_preview": "## 标签\n可加豆瓣酱、番茄酱增味,煮排骨时间可调整,可加入鸡蛋做卤蛋",
+            "node_id": "201003296",
+            "chunk_id": "201003296_chunk_650",
+            "chunk_index": 3,
+            "total_chunks": 4,
+            "section_title": "标签",
+            "rrf_sources": [
+              "bm25"
+            ],
+            "rrf_ranks": {
+              "bm25": 5
+            },
+            "rrf_raw_scores": {
+              "bm25": 7.578512556386311
+            },
+            "bm25_score": 7.578512556386311,
+            "vector_score": null,
+            "dual_score": null,
+            "rerank_score": 0.5266738191468318,
+            "reranked": true,
+            "path_length": null,
+            "node_count": null,
+            "relationship_count": null
+          }
+        ],
+        "retrieval_trace": {
+          "graph_query_plan": null,
+          "graph_paths": [],
+          "channel_stats": {
+            "candidates": {
+              "dual_level": 12,
+              "vector": 0,
+              "bm25": 14
+            },
+            "final": 5,
+            "channels": [
+              "dual_level",
+              "vector",
+              "bm25"
+            ],
+            "contributed": {
+              "dual_level": 0,
+              "vector": 0,
+              "bm25": 5
+            }
+          },
+          "rerank_stats": {
+            "enabled": true,
+            "applied": true,
+            "candidate_pool": 20,
+            "top_k": 5,
+            "model": "BAAI/bge-reranker-v2-m3"
+          }
+        },
+        "elapsed": 46.75291848182678,
+        "error": false,
+        "timestamp": 1785311156.859
+      },
+      {
+        "id": "msg-37",
+        "role": "user",
+        "content": "有哪些菜同时用到了鸡蛋和番茄？",
+        "analysis": null,
+        "sources": null,
+        "retrieval_trace": null,
+        "elapsed": null,
+        "error": false,
+        "timestamp": 1785312266.582
+      },
+      {
+        "id": "msg-38",
+        "role": "assistant",
+        "content": "根据检索到的信息，同时用到鸡蛋和番茄的常见菜品包括：\n\n1. **番茄炒蛋**（经典家常菜）  \n   - 所需食材：番茄、鸡蛋、盐、胡椒粉、葱、蒜等（参考检索中“不用番茄酱，少加佐料，还原食材原味”的标签，这道菜通常只需简单调味）。\n   - 做法：番茄切块，鸡蛋打散炒熟盛出；另起锅炒番茄至出汁，再倒入鸡蛋翻炒均匀，加盐、胡椒粉调味，撒葱花即可。\n\n2. **番茄蛋花汤**  \n   - 所需食材：番茄、鸡蛋、水、盐、香油、葱花。\n   - 做法：番茄切块煮软，淋入打散的鸡蛋液形成蛋花，加盐、香油、葱花调味。\n\n3. **番茄鸡蛋面**  \n   - 所需食材：面食（70-230g）、番茄、鸡蛋、青菜、盐、香油等（参考检索中“面食、青菜、蛋类”的食材组合）。\n   - 做法：先煮面捞出，另炒番茄鸡蛋作为浇头，可搭配青菜，最后浇在面上。\n\n4. **番茄牛肉滑蛋**（如检索中食材含牛肉、番茄、鸡蛋）  \n   - 所需食材：牛肉、番茄、鸡蛋、姜、葱、蒜、盐、胡椒粉。\n   - 做法：牛肉切片腌制，番茄炒软后加水，放入牛肉片煮至变色，最后淋入蛋液搅散成滑蛋，调味即可。\n\n此外，根据检索的标签提示（如“意面”“意大利面酱”等），也可制作**番茄鸡蛋意面**，但需注意使用普通番茄而非番茄酱。\n\n**建议**：做番茄与鸡蛋搭配的菜时，番茄最好先去皮（十字刀+小火烤或开水烫），口感更佳；鸡蛋可单独炒或最后淋入，根据菜品选择不同方式。",
+        "analysis": {
+          "recommended_strategy": "hybrid_traditional",
+          "query_complexity": 0.4,
+          "relationship_intensity": 0.5,
+          "reasoning_required": false,
+          "entity_count": 2,
+          "confidence": 0.9,
+          "reasoning": "查询涉及两个食材实体（鸡蛋、番茄）与菜品之间的共现关系，属于简单交集检索，不需要多跳推理或因果分析。传统倒排索引结合集合运算即可高效完成，因此推荐hybrid_traditional策略。"
+        },
+        "sources": [
+          {
+            "recipe_name": "汤面",
+            "search_type": "bm25",
+            "search_method": "bm25",
+            "score": 0.5181095362901902,
+            "final_score": 0.5181095362901902,
+            "content_preview": "## 所需食材\n1. 其他蔬菜（青椒番茄胡萝卜等）(适量g)\n2. 冷水(200-400ml)\n3. 盐(适量g)\n4. 肉类（牛羊鱼虾等）(适量g)\n5. 胡椒粉(适量g)\n6. 蛋类（鸡蛋鸭蛋等）(适量个)\n7. 豆制品（豆腐皮等）(适量g)\n8. 青菜（生菜菠菜等）(适量g)\n9. 面食(70-230g)\n10. 香油(适量ml)",
+            "node_id": "201004040",
+            "chunk_id": "201004040_chunk_797",
+            "chunk_index": 1,
+            "total_chunks": 4,
+            "section_title": "所需食材",
+            "rrf_sources": [
+              "bm25"
+            ],
+            "rrf_ranks": {
+              "bm25": 4
+            },
+            "rrf_raw_scores": {
+              "bm25": 6.520569210441482
+            },
+            "bm25_score": 6.520569210441482,
+            "vector_score": null,
+            "dual_score": null,
+            "rerank_score": 0.5181095362901902,
+            "reranked": true,
+            "path_length": null,
+            "node_count": null,
+            "relationship_count": null
+          },
+          {
+            "recipe_name": "罗宋汤",
+            "search_type": "bm25",
+            "search_method": "bm25",
+            "score": 0.5090869828648237,
+            "final_score": 0.5090869828648237,
+            "content_preview": "## 标签\n番茄罐头+番茄膏风味更佳,胡萝卜洋葱欧芹牛肉为必备,其余食材可自由搭配",
+            "node_id": "201003793",
+            "chunk_id": "201003793_chunk_747",
+            "chunk_index": 3,
+            "total_chunks": 4,
+            "section_title": "标签",
+            "rrf_sources": [
+              "bm25"
+            ],
+            "rrf_ranks": {
+              "bm25": 1
+            },
+            "rrf_raw_scores": {
+              "bm25": 8.043550851289435
+            },
+            "bm25_score": 8.043550851289435,
+            "vector_score": null,
+            "dual_score": null,
+            "rerank_score": 0.5090869828648237,
+            "reranked": true,
+            "path_length": null,
+            "node_count": null,
+            "relationship_count": null
+          },
+          {
+            "recipe_name": "番茄牛肉蛋花汤",
+            "search_type": "bm25",
+            "search_method": "bm25",
+            "score": 0.5052062598585455,
+            "final_score": 0.5052062598585455,
+            "content_preview": "## 所需食材\n1. 姜(适量片)\n2. 牛肉(150g)\n3. 番茄(1个)\n4. 盐(2g)\n5. 胡椒粉(0.5g)\n6. 葱(适量根)\n7. 蒜(适量瓣)\n8. 鸡蛋(1个)",
+            "node_id": "201003726",
+            "chunk_id": "201003726_chunk_729",
+            "chunk_index": 1,
+            "total_chunks": 4,
+            "section_title": "所需食材",
+            "rrf_sources": [
+              "bm25"
+            ],
+            "rrf_ranks": {
+              "bm25": 2
+            },
+            "rrf_raw_scores": {
+              "bm25": 7.882916036686435
+            },
+            "bm25_score": 7.882916036686435,
+            "vector_score": null,
+            "dual_score": null,
+            "rerank_score": 0.5052062598585455,
+            "reranked": true,
+            "path_length": null,
+            "node_count": null,
+            "relationship_count": null
+          },
+          {
+            "recipe_name": "西红柿牛腩",
+            "search_type": "bm25",
+            "search_method": "bm25",
+            "score": 0.5025093712634731,
+            "final_score": 0.5025093712634731,
+            "content_preview": "## 标签\n用火注意安全,砂锅/铝锅炖肉时水开后转中小火/小火,番茄去皮方法：十字刀+小火旋转烤,不用番茄酱，少加佐料，还原食材原味",
+            "node_id": "201003224",
+            "chunk_id": "201003224_chunk_634",
+            "chunk_index": 3,
+            "total_chunks": 4,
+            "section_title": "标签",
+            "rrf_sources": [
+              "bm25"
+            ],
+            "rrf_ranks": {
+              "bm25": 7
+            },
+            "rrf_raw_scores": {
+              "bm25": 5.986291357729415
+            },
+            "bm25_score": 5.986291357729415,
+            "vector_score": null,
+            "dual_score": null,
+            "rerank_score": 0.5025093712634731,
+            "reranked": true,
+            "path_length": null,
+            "node_count": null,
+            "relationship_count": null
+          },
+          {
+            "recipe_name": "意式肉酱面",
+            "search_type": "bm25",
+            "search_method": "bm25",
+            "score": 0.5015767829143375,
+            "final_score": 0.5015767829143375,
+            "content_preview": "## 标签\n意面粗细不同需按包装时间煮,意大利面酱≠番茄沙司，调味料不同",
+            "node_id": "201004466",
+            "chunk_id": "201004466_chunk_891",
+            "chunk_index": 3,
+            "total_chunks": 4,
+            "section_title": "标签",
+            "rrf_sources": [
+              "bm25"
+            ],
+            "rrf_ranks": {
+              "bm25": 3
+            },
+            "rrf_raw_scores": {
+              "bm25": 6.598499742501233
+            },
+            "bm25_score": 6.598499742501233,
+            "vector_score": null,
+            "dual_score": null,
+            "rerank_score": 0.5015767829143375,
+            "reranked": true,
+            "path_length": null,
+            "node_count": null,
+            "relationship_count": null
+          }
+        ],
+        "retrieval_trace": {
+          "graph_query_plan": null,
+          "graph_paths": [],
+          "channel_stats": {
+            "candidates": {
+              "dual_level": 9,
+              "vector": 0,
+              "bm25": 40
+            },
+            "final": 5,
+            "channels": [
+              "dual_level",
+              "vector",
+              "bm25"
+            ],
+            "contributed": {
+              "dual_level": 0,
+              "vector": 0,
+              "bm25": 5
+            }
+          },
+          "rerank_stats": {
+            "enabled": true,
+            "applied": true,
+            "candidate_pool": 20,
+            "top_k": 5,
+            "model": "BAAI/bge-reranker-v2-m3"
+          }
+        },
+        "elapsed": 43.083826303482056,
+        "error": false,
+        "timestamp": 1785312309.674
+      },
+      {
+        "id": "msg-39",
+        "role": "user",
+        "content": "有哪些适合新手做的家常菜？",
+        "analysis": null,
+        "sources": null,
+        "retrieval_trace": null,
+        "elapsed": null,
+        "error": false,
+        "timestamp": 1785314558.574
+      },
+      {
+        "id": "msg-40",
+        "role": "assistant",
+        "content": "根据检索到的信息，以下是为新手推荐的几道家常菜，均具有操作简单、不易失败的特点：\n\n1. **红烧鲫鱼**  \n   - 新手建议选用鲫鱼，煎鱼前擦干鱼身水分以防止溅油，全程小火慢煎避免糊锅，收汁至鱼鳍下方位置即可。若加小米椒，最多2个以防过辣。\n\n2. **红烧肉**  \n   - 这道菜被标注为“新手不败”，特点是肥而不腻、色泽诱人、香糯下饭，与米饭搭配极佳。做法相对简单，只需掌握好火候和调味。\n\n3. **其他简单下饭菜**  \n   - 标签提到“食材简单，新手友好”“适合降温时食用”，可尝试一些基础炖菜或汤类（如番茄炒蛋、土豆炖牛肉等），食材易得，步骤少，非常适合初学者尝试。\n\n以上菜品均注重操作容错率，鼓励新手大胆练习。如果对某道菜的具体做法有更详细的需求，请告诉我，我会进一步提供步骤。",
+        "analysis": {
+          "recommended_strategy": "hybrid_traditional",
+          "query_complexity": 0.5,
+          "relationship_intensity": 0.4,
+          "reasoning_required": false,
+          "entity_count": 2,
+          "confidence": 0.9,
+          "reasoning": "查询要求列出适合新手的家常菜，属于中等复杂度的信息查找，涉及两个实体（新手、家常菜）之间的简单筛选关系，无需多跳推理或因果分析，适合基于标签或分类的传统检索策略。"
+        },
+        "sources": [
+          {
+            "recipe_name": "红烧鱼",
+            "search_type": "bm25",
+            "search_method": "bm25",
+            "score": 0.5456412423817436,
+            "final_score": 0.5456412423817436,
+            "content_preview": "## 标签\n新手建议用鲫鱼,煎鱼前擦干水分防溅油,小火煎鱼防糊,收汁到鱼鳍下位置即可,小米椒最多2个防过辣",
+            "node_id": "201000073",
+            "chunk_id": "201000073_chunk_19",
+            "chunk_index": 3,
+            "total_chunks": 4,
+            "section_title": "标签",
+            "rrf_sources": [
+              "dual_level",
+              "bm25"
+            ],
+            "rrf_ranks": {
+              "dual_level": 26,
+              "bm25": 15
+            },
+            "rrf_raw_scores": {
+              "dual_level": 0.75,
+              "bm25": 7.478181364825275
+            },
+            "bm25_score": 7.478181364825275,
+            "vector_score": null,
+            "dual_score": null,
+            "rerank_score": 0.5456412423817436,
+            "reranked": true,
+            "path_length": null,
+            "node_count": null,
+            "relationship_count": null
+          },
+          {
+            "recipe_name": "土豆炖排骨",
+            "search_type": "bm25",
+            "search_method": "bm25",
+            "score": 0.5398794411260815,
+            "final_score": 0.5398794411260815,
+            "content_preview": "## 标签\n简单,新手友好,下饭",
+            "node_id": "201002369",
+            "chunk_id": "201002369_chunk_486",
+            "chunk_index": 3,
+            "total_chunks": 4,
+            "section_title": "标签",
+            "rrf_sources": [
+              "dual_level",
+              "bm25"
+            ],
+            "rrf_ranks": {
+              "dual_level": 11,
+              "bm25": 5
+            },
+            "rrf_raw_scores": {
+              "dual_level": 0.75,
+              "bm25": 8.61711360657964
+            },
+            "bm25_score": 8.61711360657964,
+            "vector_score": null,
+            "dual_score": null,
+            "rerank_score": 0.5398794411260815,
+            "reranked": true,
+            "path_length": null,
+            "node_count": null,
+            "relationship_count": null
+          },
+          {
+            "recipe_name": "南派红烧肉",
+            "search_type": "bm25",
+            "search_method": "bm25",
+            "score": 0.5398648901341732,
+            "final_score": 0.5398648901341732,
+            "content_preview": "## 标签\n新手不败,肥而不腻,色泽诱人,香糯无敌,配米饭绝佳",
+            "node_id": "201002978",
+            "chunk_id": "201002978_chunk_590",
+            "chunk_index": 3,
+            "total_chunks": 4,
+            "section_title": "标签",
+            "rrf_sources": [
+              "dual_level",
+              "bm25"
+            ],
+            "rrf_ranks": {
+              "dual_level": 22,
+              "bm25": 8
+            },
+            "rrf_raw_scores": {
+              "dual_level": 0.75,
+              "bm25": 8.059194961963545
+            },
+            "bm25_score": 8.059194961963545,
+            "vector_score": null,
+            "dual_score": null,
+            "rerank_score": 0.5398648901341732,
+            "reranked": true,
+            "path_length": null,
+            "node_count": null,
+            "relationship_count": null
+          },
+          {
+            "recipe_name": "简易红烧肉",
+            "search_type": "bm25",
+            "search_method": "bm25",
+            "score": 0.5343816062013631,
+            "final_score": 0.5343816062013631,
+            "content_preview": "## 标签\n新手不败,肥而不腻,色泽诱人,香糯下饭",
+            "node_id": "201003002",
+            "chunk_id": "201003002_chunk_594",
+            "chunk_index": 3,
+            "total_chunks": 4,
+            "section_title": "标签",
+            "rrf_sources": [
+              "dual_level",
+              "bm25"
+            ],
+            "rrf_ranks": {
+              "dual_level": 17,
+              "bm25": 7
+            },
+            "rrf_raw_scores": {
+              "dual_level": 0.75,
+              "bm25": 8.273462485257301
+            },
+            "bm25_score": 8.273462485257301,
+            "vector_score": null,
+            "dual_score": null,
+            "rerank_score": 0.5343816062013631,
+            "reranked": true,
+            "path_length": null,
+            "node_count": null,
+            "relationship_count": null
+          },
+          {
+            "recipe_name": "玉米排骨汤",
+            "search_type": "bm25",
+            "search_method": "bm25",
+            "score": 0.5255810733199836,
+            "final_score": 0.5255810733199836,
+            "content_preview": "## 标签\n食材简单,新手友好,适合降温时食用",
+            "node_id": "201003939",
+            "chunk_id": "201003939_chunk_776",
+            "chunk_index": 3,
+            "total_chunks": 4,
+            "section_title": "标签",
+            "rrf_sources": [
+              "dual_level",
+              "bm25"
+            ],
+            "rrf_ranks": {
+              "dual_level": 15,
+              "bm25": 1
+            },
+            "rrf_raw_scores": {
+              "dual_level": 0.75,
+              "bm25": 16.482875824198906
+            },
+            "bm25_score": 16.482875824198906,
+            "vector_score": null,
+            "dual_score": null,
+            "rerank_score": 0.5255810733199836,
+            "reranked": true,
+            "path_length": null,
+            "node_count": null,
+            "relationship_count": null
+          }
+        ],
+        "retrieval_trace": {
+          "graph_query_plan": null,
+          "graph_paths": [],
+          "channel_stats": {
+            "candidates": {
+              "dual_level": 26,
+              "vector": 0,
+              "bm25": 26
+            },
+            "final": 5,
+            "channels": [
+              "dual_level",
+              "vector",
+              "bm25"
+            ],
+            "contributed": {
+              "dual_level": 5,
+              "vector": 0,
+              "bm25": 5
+            }
+          },
+          "rerank_stats": {
+            "enabled": true,
+            "applied": true,
+            "candidate_pool": 20,
+            "top_k": 5,
+            "model": "BAAI/bge-reranker-v2-m3"
+          }
+        },
+        "elapsed": 25.649752378463745,
+        "error": false,
+        "timestamp": 1785314584.241
+      },
+      {
+        "id": "msg-41",
+        "role": "user",
+        "content": "有哪些适合新手做的家常菜？",
+        "analysis": null,
+        "sources": null,
+        "retrieval_trace": null,
+        "elapsed": null,
+        "error": false,
+        "timestamp": 1785315560.583
+      },
+      {
+        "id": "msg-42",
+        "role": "assistant",
+        "content": "根据您提供的食谱信息，以下是适合新手做的家常菜，并附上推荐理由：\n\n1. **土豆炖排骨**（难度：3.0星）  \n   - 标签：简单、新手友好、下饭  \n   - 理由：步骤清晰，焯水后炖煮为主，不易失败，配菜土豆增加风味。\n\n2. **简易红烧肉**（难度：3.0星）  \n   - 标签：新手不败、肥而不腻、色泽诱人  \n   - 理由：详细步骤处理五花肉，有炒糖色和炖煮技巧，但整体操作可控，适合初学者尝试。\n\n3. **玉米排骨汤**（难度：3.0星）  \n   - 标签：食材简单、新手友好、适合降温时食用  \n   - 理由：焯水后煸炒再炖煮，调味简单，只需注意火候和时间，成功率很高。\n\n以上三道菜均为3星级难度，并带有“新手友好”或“新手不败”标签，推荐优先尝试。如果您对其中某道的具体步骤有疑问，我可以进一步为您展开说明。",
+        "analysis": {
+          "recommended_strategy": "hybrid_traditional",
+          "query_complexity": 0.5,
+          "relationship_intensity": 0.4,
+          "reasoning_required": false,
+          "entity_count": 2,
+          "confidence": 0.9,
+          "reasoning": "该查询要求列出同时满足'适合新手'和'家常菜'条件的菜品，属于中等复杂度的筛选型信息检索。实体关系简单（'新手'与'家常菜'的交叉条件），无需多跳推理或因果分析。推荐使用传统混合检索策略（如关键词+语义搜索）高效获取相关菜谱列表。"
+        },
+        "sources": [
+          {
+            "recipe_name": "红烧鱼",
+            "search_type": "bm25",
+            "search_method": "bm25",
+            "score": 0.5456413014897326,
+            "final_score": 0.5456413014897326,
+            "content_preview": "# 红烧鱼\n难度: 4.0星\n\n时间信息: 准备时间: 约10分钟（切配姜蒜辣椒、处理鱼）, 烹饪时间: 约8-10分钟（煎鱼+炖煮+收汁）\n份量: 1条鱼（1-2人）\n\n## 所需食材\n1. 味精(5克)\n2. 姜(2片)\n3. 小米椒(1.5个)\n4. 干辣椒(2.5个)\n5. 料酒\n6. 油(40毫升)\n7. 白砂糖(10克)\n8. 盐(10克)\n9. 葱(1.5根)\n10. 蒜瓣(3.5个)\n11. 蚝油(5克)\n12. 酱油(5毫升)\n13. 醋(5毫升)\n14. 香菜\n15. 鲫鱼(1条)\n\n## 制作步骤\n\n### 第1步\n步骤: 步骤1\n描述: 姜蒜切碎，干辣椒切碎，与姜蒜一起",
+            "node_id": "201000073",
+            "chunk_id": "201000073_chunk_19",
+            "chunk_index": 3,
+            "total_chunks": 4,
+            "section_title": "标签",
+            "rrf_sources": [
+              "dual_level",
+              "bm25"
+            ],
+            "rrf_ranks": {
+              "dual_level": 32,
+              "bm25": 15
+            },
+            "rrf_raw_scores": {
+              "dual_level": 0.75,
+              "bm25": 7.478181364825275
+            },
+            "bm25_score": 7.478181364825275,
+            "vector_score": null,
+            "dual_score": null,
+            "rerank_score": 0.5456413014897326,
+            "reranked": true,
+            "path_length": null,
+            "node_count": null,
+            "relationship_count": null
+          },
+          {
+            "recipe_name": "土豆炖排骨",
+            "search_type": "bm25",
+            "search_method": "bm25",
+            "score": 0.5398794411260815,
+            "final_score": 0.5398794411260815,
+            "content_preview": "# 土豆炖排骨\n难度: 3.0星\n\n时间信息: 准备时间: 约15分钟（切配、焯水）, 烹饪时间: 约70分钟（煎糖色+炖煮1小时+土豆10分钟）\n份量: 2-3人\n\n## 所需食材\n1. 八角(5g)\n2. 土豆(300g)\n3. 姜(30g)\n4. 小葱(25g)\n5. 干辣椒(5g)\n6. 料酒(25g)\n7. 桂皮(5g)\n8. 生抽(10g)\n9. 白糖(10g)\n10. 老抽(5g)\n11. 肋排(750g)\n12. 花椒(5g)\n13. 蚝油(5g)\n14. 黄豆酱(5g)\n\n## 制作步骤\n\n### 第1步\n步骤: 步骤1\n描述: 土豆两个滚刀切片，姜片切片\n方法: 切\n工具:",
+            "node_id": "201002369",
+            "chunk_id": "201002369_chunk_486",
+            "chunk_index": 3,
+            "total_chunks": 4,
+            "section_title": "标签",
+            "rrf_sources": [
+              "dual_level",
+              "bm25"
+            ],
+            "rrf_ranks": {
+              "dual_level": 17,
+              "bm25": 5
+            },
+            "rrf_raw_scores": {
+              "dual_level": 0.75,
+              "bm25": 8.61711360657964
+            },
+            "bm25_score": 8.61711360657964,
+            "vector_score": null,
+            "dual_score": null,
+            "rerank_score": 0.5398794411260815,
+            "reranked": true,
+            "path_length": null,
+            "node_count": null,
+            "relationship_count": null
+          },
+          {
+            "recipe_name": "南派红烧肉",
+            "search_type": "bm25",
+            "search_method": "bm25",
+            "score": 0.5398648901341732,
+            "final_score": 0.5398648901341732,
+            "content_preview": "# 南派红烧肉\n难度: 4.0星\n\n时间信息: 准备时间: 约20分钟（切肉、切配料、焯水准备）, 烹饪时间: 约90-110分钟（焯水15分钟+炒糖色与炖煮50-60分钟+收汁10-15分钟）\n份量: 1-3人\n\n## 所需食材\n1. 八角(3个)\n2. 冰糖(15块)\n3. 凉水(没过食材适量)\n4. 姜(6片)\n5. 开水(没过食材适量)\n6. 料酒(20毫升)\n7. 油(100-150毫升)\n8. 猪五花肉(1000克)\n9. 白砂糖(30克)\n10. 盐(2-3克)\n11. 老抽(15毫升)\n12. 花椒(10克)\n13. 葱(适量根)\n14. 蒜(适量瓣)\n15. 香叶(4片)\n\n",
+            "node_id": "201002978",
+            "chunk_id": "201002978_chunk_590",
+            "chunk_index": 3,
+            "total_chunks": 4,
+            "section_title": "标签",
+            "rrf_sources": [
+              "dual_level",
+              "bm25"
+            ],
+            "rrf_ranks": {
+              "dual_level": 28,
+              "bm25": 8
+            },
+            "rrf_raw_scores": {
+              "dual_level": 0.75,
+              "bm25": 8.059194961963545
+            },
+            "bm25_score": 8.059194961963545,
+            "vector_score": null,
+            "dual_score": null,
+            "rerank_score": 0.5398648901341732,
+            "reranked": true,
+            "path_length": null,
+            "node_count": null,
+            "relationship_count": null
+          },
+          {
+            "recipe_name": "简易红烧肉",
+            "search_type": "bm25",
+            "search_method": "bm25",
+            "score": 0.5343816062013631,
+            "final_score": 0.5343816062013631,
+            "content_preview": "# 简易红烧肉\n难度: 3.0星\n\n时间信息: 准备时间: 约20分钟（切肉、焯水、准备配料）, 烹饪时间: 约95分钟（焯水15分钟+煎肉+炖煮80分钟）\n份量: 2-3人\n\n## 所需食材\n1. 八角(2个)\n2. 冰糖(15克)\n3. 姜(6片)\n4. 开水(750毫升)\n5. 料酒(5毫升)\n6. 猪五花肉(3.5斤)\n7. 生抽(10毫升)\n8. 盐(2.5克)\n9. 老抽(15毫升)\n10. 葱(1根)\n11. 豆皮(40克)\n12. 香叶(3片)\n13. 鹌鹑蛋(1个)\n\n## 制作步骤\n\n### 第1步\n步骤: 步骤1\n描述: 将猪五花肉切成约4.5cm的大块，冷冻半小时至一小",
+            "node_id": "201003002",
+            "chunk_id": "201003002_chunk_594",
+            "chunk_index": 3,
+            "total_chunks": 4,
+            "section_title": "标签",
+            "rrf_sources": [
+              "dual_level",
+              "bm25"
+            ],
+            "rrf_ranks": {
+              "dual_level": 23,
+              "bm25": 7
+            },
+            "rrf_raw_scores": {
+              "dual_level": 0.75,
+              "bm25": 8.273462485257301
+            },
+            "bm25_score": 8.273462485257301,
+            "vector_score": null,
+            "dual_score": null,
+            "rerank_score": 0.5343816062013631,
+            "reranked": true,
+            "path_length": null,
+            "node_count": null,
+            "relationship_count": null
+          },
+          {
+            "recipe_name": "玉米排骨汤",
+            "search_type": "bm25",
+            "search_method": "bm25",
+            "score": 0.5255810733199836,
+            "final_score": 0.5255810733199836,
+            "content_preview": "# 玉米排骨汤\n难度: 3.0星\n\n时间信息: 准备时间: 约15分钟, 烹饪时间: 约70分钟\n份量: 1份\n\n## 所需食材\n1. 大葱(小半根根)\n2. 开水(1000ml)\n3. 排骨(500-800g)\n4. 料酒(10ml)\n5. 玉米(1根)\n6. 生姜(若干片)\n7. 胡萝卜(1根)\n8. 醋(10ml)\n9. 食用油(10ml)\n10. 食用盐(10-15g)\n11. 香葱(1根)\n12. 黑胡椒粉(4g)\n\n## 制作步骤\n\n### 第1步\n步骤: 步骤1\n描述: 大葱切成3-4cm的大段，用刀背拍一下；玉米剁成小块；胡萝卜切成滚刀块；生姜去皮切大片；排骨砍成小块。\n方法:",
+            "node_id": "201003939",
+            "chunk_id": "201003939_chunk_776",
+            "chunk_index": 3,
+            "total_chunks": 4,
+            "section_title": "标签",
+            "rrf_sources": [
+              "dual_level",
+              "bm25"
+            ],
+            "rrf_ranks": {
+              "dual_level": 21,
+              "bm25": 1
+            },
+            "rrf_raw_scores": {
+              "dual_level": 0.75,
+              "bm25": 16.482875824198906
+            },
+            "bm25_score": 16.482875824198906,
+            "vector_score": null,
+            "dual_score": null,
+            "rerank_score": 0.5255810733199836,
+            "reranked": true,
+            "path_length": null,
+            "node_count": null,
+            "relationship_count": null
+          }
+        ],
+        "retrieval_trace": {
+          "graph_query_plan": null,
+          "graph_paths": [],
+          "channel_stats": {
+            "candidates": {
+              "dual_level": 32,
+              "vector": 0,
+              "bm25": 26
+            },
+            "final": 5,
+            "channels": [
+              "dual_level",
+              "vector",
+              "bm25"
+            ],
+            "contributed": {
+              "dual_level": 5,
+              "vector": 0,
+              "bm25": 5
+            }
+          },
+          "rerank_stats": {
+            "enabled": true,
+            "applied": true,
+            "candidate_pool": 20,
+            "top_k": 5,
+            "model": "BAAI/bge-reranker-v2-m3"
+          }
+        },
+        "elapsed": 24.520734071731567,
+        "error": false,
+        "timestamp": 1785315585.119
+      },
+      {
+        "id": "msg-43",
+        "role": "user",
+        "content": "煮鸡蛋需要几分钟？不同时间有什么区别？",
+        "analysis": null,
+        "sources": null,
+        "retrieval_trace": null,
+        "elapsed": null,
+        "error": false,
+        "timestamp": 1785316512.887
+      },
+      {
+        "id": "msg-44",
+        "role": "assistant",
+        "content": "根据您的问题，煮鸡蛋的时间取决于您想要的口感。结合检索到的两个菜谱（茶叶蛋和苏格兰蛋），不同时间对应以下区别：\n\n### 不同煮制时间及口感区别\n\n| 时间 | 状态 | 适用场景 | 示例菜谱 |\n|------|------|----------|----------|\n| **3分钟**（水开后计时） | **溏心蛋**：蛋白凝固，蛋黄呈流动状，口感嫩滑。 | 适合需要溏心效果再加工（如炸苏格兰蛋）或直接食用。 | 苏格兰蛋：冷水下锅，水开后煮3分钟，捞出过冰水剥壳。 |\n| **8分钟**（冷水下锅，大火煮制） | **全熟蛋**：蛋白和蛋黄完全凝固，蛋黄干爽。 | 适合后续卤制（如茶叶蛋），或需要扎实口感。 | 茶叶蛋：冷水下锅大火煮8分钟，捞出过冷水敲裂再卤。 |\n\n### 关键区别\n- **3分钟**：蛋黄未完全凝固，切开会流心，需快速过冰水定型剥壳，否则易碎。\n- **8分钟**：蛋黄全熟，剥壳容易（过冷水后），适合入味卤制或直接切片。\n\n### 额外提示\n- 如果追求**半熟状态**（蛋黄软糯但基本不流动），可煮5-6分钟（对应溏心与全熟之间）。\n- 注意：时间均从水沸腾后开始计算（苏格兰蛋）或从冷水下锅开始（茶叶蛋），需按菜谱具体方法操作。\n\n希望以上信息能帮助您根据需求选择合适的煮蛋时间！",
+        "analysis": {
+          "recommended_strategy": "combined",
+          "query_complexity": 0.6,
+          "relationship_intensity": 0.7,
+          "reasoning_required": true,
+          "entity_count": 2,
+          "confidence": 0.8,
+          "reasoning": "查询包含两部分：第一是简单的事实查找（煮鸡蛋需要几分钟），第二是对比分析（不同时间有什么区别）。需要检索不同时间对应的鸡蛋状态（如溏心、全熟）并解释差异，涉及时间与状态的映射关系。推荐combined策略：先用传统检索获取基准时间信息，再用图结构关联不同时间与结果之间的语义关系，以便生成对比答案。"
+        },
+        "sources": [
+          {
+            "recipe_name": "茶叶蛋",
+            "search_type": "bm25",
+            "search_method": "bm25",
+            "score": 0.5891774518471721,
+            "final_score": 0.5891774518471721,
+            "content_preview": "# 茶叶蛋\n难度: 3.0星\n\n时间信息: 准备时间: 5分钟, 烹饪时间: 30分钟\n份量: 2-3人\n\n## 所需食材\n1. 八角(4g)\n2. 冰糖(15g)\n3. 桂皮(3g)\n4. 生抽(15g)\n5. 红茶(20g)\n6. 老抽(25g)\n7. 茴香(5g)\n8. 食盐(3g)\n9. 香叶(0.5g)\n10. 鸡蛋(400g)\n\n## 制作步骤\n\n### 第1步\n步骤: 步骤1\n描述: 用冷水将鸡蛋煮熟，大火大约8分钟\n方法: 煮\n工具: 锅\n时间: 8分钟\n\n### 第2步\n步骤: 步骤2\n描述: 鸡蛋捞出，过冷水\n方法: 冷却\n工具: 冷水盆\n\n### 第3步\n步骤: 步骤3\n",
+            "node_id": "201000670",
+            "chunk_id": "201000670_chunk_130",
+            "chunk_index": 2,
+            "total_chunks": 4,
+            "section_title": "制作步骤",
+            "rrf_sources": [
+              "bm25"
+            ],
+            "rrf_ranks": {
+              "bm25": 9
+            },
+            "rrf_raw_scores": {
+              "bm25": 7.814450234427155
+            },
+            "bm25_score": 7.814450234427155,
+            "vector_score": null,
+            "dual_score": null,
+            "rerank_score": 0.5891774518471721,
+            "reranked": true,
+            "path_length": null,
+            "node_count": null,
+            "relationship_count": null
+          },
+          {
+            "recipe_name": "苏格兰蛋",
+            "search_type": "bm25",
+            "search_method": "bm25",
+            "score": 0.5617943391170576,
+            "final_score": 0.5617943391170576,
+            "content_preview": "# 苏格兰蛋\n难度: 3.0星\n\n时间信息: 准备时间: 约5分钟, 烹饪时间: 15-20分钟\n份量: 1人份\n\n## 所需食材\n1. 培根片(1.5片)\n2. 手抓饼(1.5份)\n3. 芝士片(1.5片)\n4. 鸡蛋(50克)\n\n## 制作步骤\n\n### 第1步\n步骤: 步骤1\n描述: 用冷水下锅，水开后煮3分钟\n方法: 煮\n工具: 锅\n时间: 3分钟\n\n### 第2步\n步骤: 步骤2\n描述: 鸡蛋捞出，放入冰水中剥壳更快速也更完整\n方法: 冷却,剥壳\n工具: 冰水,碗\n时间: 1-2分钟\n\n### 第3步\n步骤: 步骤3\n描述: 用芝士片包裹鸡蛋\n方法: 包裹\n时间: 30秒\n\n### ",
+            "node_id": "201000755",
+            "chunk_id": "201000755_chunk_155",
+            "chunk_index": 2,
+            "total_chunks": 4,
+            "section_title": "制作步骤",
+            "rrf_sources": [
+              "bm25"
+            ],
+            "rrf_ranks": {
+              "bm25": 13
+            },
+            "rrf_raw_scores": {
+              "bm25": 7.300367958366365
+            },
+            "bm25_score": 7.300367958366365,
+            "vector_score": null,
+            "dual_score": null,
+            "rerank_score": 0.5617943391170576,
+            "reranked": true,
+            "path_length": null,
+            "node_count": null,
+            "relationship_count": null
+          }
+        ],
+        "retrieval_trace": {
+          "graph_query_plan": {
+            "query_type": "multi_hop",
+            "source_entities": [
+              "鸡蛋"
+            ],
+            "target_entities": [],
+            "relation_types": [
+              "REQUIRES",
+              "CONTAINS_STEP"
+            ],
+            "max_depth": 3
+          },
+          "graph_paths": [],
+          "channel_stats": {
+            "candidates": {
+              "dual_level": 3,
+              "vector": 0,
+              "bm25": 40
+            },
+            "final": 2,
+            "channels": [
+              "dual_level",
+              "vector",
+              "bm25"
+            ],
+            "contributed": {
+              "dual_level": 0,
+              "vector": 0,
+              "bm25": 2
+            }
+          },
+          "rerank_stats": {
+            "enabled": true,
+            "applied": true,
+            "candidate_pool": 20,
+            "top_k": 2,
+            "model": "BAAI/bge-reranker-v2-m3"
+          }
+        },
+        "elapsed": 43.09938383102417,
+        "error": false,
+        "timestamp": 1785316555.997
+      },
+      {
+        "id": "msg-45",
+        "role": "user",
+        "content": "煮鸡蛋需要几分钟？不同时间有什么区别？",
+        "analysis": null,
+        "sources": null,
+        "retrieval_trace": null,
+        "elapsed": null,
+        "error": false,
+        "timestamp": 1785317480.759
+      },
+      {
+        "id": "msg-46",
+        "role": "assistant",
+        "content": "根据您的问题，我首先从检索到的信息中提取相关内容，并结合一般烹饪常识给出回答。\n\n### 关于“煮鸡蛋需要几分钟”\n\n在检索到的**茶叶蛋**菜谱中，第一步明确说明：  \n> “用冷水将鸡蛋煮熟，大火大约**8分钟**”。  \n这是将鸡蛋完全煮熟（蛋白和蛋黄均凝固）的时间。后续步骤还需要卤制，但单就“煮熟”这一步而言，建议时间为**8分钟**。\n\n### 不同煮蛋时间的区别（一般性参考）\n\n虽然检索信息只给出了8分钟这一种情况，但根据通用烹饪经验，煮鸡蛋的时间不同会导致口感差异：\n\n| 时间（冷水下锅，大火烧开后计时） | 蛋黄状态 | 口感特点 |\n|-------------------------------|---------|---------|\n| 6分钟左右 | 溏心（蛋黄中心流动） | 嫩滑，适合蘸酱油或搭配沙拉 |\n| 8分钟 | 全熟（蛋黄完全凝固，但不过硬） | 适合做茶叶蛋、卤蛋或直接食用 |\n| 10分钟以上 | 全熟偏硬，蛋黄边缘可能出现灰绿色 | 口感较干，容易噎住，长时间煮还会影响营养 |\n\n### 注意事项\n- 上述时间适用于**常温鸡蛋冷水下锅**，水开后转中小火。\n- 如果鸡蛋从冰箱取出，建议先恢复室温或适当延长1-2分钟。\n- 煮好后立即过冷水，可防止余热继续加热并方便剥壳（如茶叶蛋菜谱中的做法）。\n\n总结：**检索信息推荐煮8分钟**，此时鸡蛋已全熟；调整时间可得到溏心或更硬的口感，您可根据个人喜好选择。",
+        "analysis": {
+          "recommended_strategy": "combined",
+          "query_complexity": 0.6,
+          "relationship_intensity": 0.7,
+          "reasoning_required": true,
+          "entity_count": 3,
+          "confidence": 0.85,
+          "reasoning": "查询包含两个子问题：一是直接的事实性查找（煮鸡蛋需要几分钟），二是对比分析（不同时间有什么区别）。前者适合简单检索，后者涉及时间与结果（如蛋黄状态）的映射关系，需要图结构支持对比推理。因此推荐结合传统检索和图形检索的混合策略。"
+        },
+        "sources": [
+          {
+            "recipe_name": "茶叶蛋",
+            "search_type": "bm25",
+            "search_method": "bm25",
+            "score": 0.5891774374200238,
+            "final_score": 0.5891774374200238,
+            "content_preview": "# 茶叶蛋\n难度: 3.0星\n\n时间信息: 准备时间: 5分钟, 烹饪时间: 30分钟\n份量: 2-3人\n\n## 所需食材\n1. 八角(4g)\n2. 冰糖(15g)\n3. 桂皮(3g)\n4. 生抽(15g)\n5. 红茶(20g)\n6. 老抽(25g)\n7. 茴香(5g)\n8. 食盐(3g)\n9. 香叶(0.5g)\n10. 鸡蛋(400g)\n\n## 制作步骤\n\n### 第1步\n步骤: 步骤1\n描述: 用冷水将鸡蛋煮熟，大火大约8分钟\n方法: 煮\n工具: 锅\n时间: 8分钟\n\n### 第2步\n步骤: 步骤2\n描述: 鸡蛋捞出，过冷水\n方法: 冷却\n工具: 冷水盆\n\n### 第3步\n步骤: 步骤3\n",
+            "node_id": "201000670",
+            "chunk_id": "201000670_chunk_130",
+            "chunk_index": 2,
+            "total_chunks": 4,
+            "section_title": "制作步骤",
+            "rrf_sources": [
+              "bm25"
+            ],
+            "rrf_ranks": {
+              "bm25": 9
+            },
+            "rrf_raw_scores": {
+              "bm25": 7.814450234427155
+            },
+            "bm25_score": 7.814450234427155,
+            "vector_score": null,
+            "dual_score": null,
+            "rerank_score": 0.5891774374200238,
+            "reranked": true,
+            "path_length": null,
+            "node_count": null,
+            "relationship_count": null
+          },
+          {
+            "recipe_name": "酱排骨",
+            "search_type": "bm25",
+            "search_method": "bm25",
+            "score": 0.5016715635436824,
+            "final_score": 0.5016715635436824,
+            "content_preview": "# 酱排骨\n难度: 4.0星\n\n时间信息: 准备时间: 约5分钟, 烹饪时间: 约45分钟\n份量: 1人份\n\n## 所需食材\n1. 五香粉(20g)\n2. 姜(2片)\n3. 小米椒(1个)\n4. 排骨(300g)\n5. 料酒(10ml)\n6. 生抽(10ml)\n7. 白砂糖(15g)\n8. 老抽(10ml)\n9. 蒜(2粒)\n10. 蚝油(5ml)\n11. 食用油(30ml)\n\n## 制作步骤\n\n### 第1步\n步骤: 步骤1\n描述: 起锅烧热水，放入排骨、姜片、料酒，煮开后用勺子舀去白色油沫，2-3 分钟后出锅\n方法: 煮\n工具: 锅,勺子\n时间: 2-3分钟\n\n### 第2步\n步骤: 步骤",
+            "node_id": "201003296",
+            "chunk_id": "201003296_chunk_650",
+            "chunk_index": 3,
+            "total_chunks": 4,
+            "section_title": "标签",
+            "rrf_sources": [
+              "bm25"
+            ],
+            "rrf_ranks": {
+              "bm25": 7
+            },
+            "rrf_raw_scores": {
+              "bm25": 8.009771359033783
+            },
+            "bm25_score": 8.009771359033783,
+            "vector_score": null,
+            "dual_score": null,
+            "rerank_score": 0.5016715635436824,
+            "reranked": true,
+            "path_length": null,
+            "node_count": null,
+            "relationship_count": null
+          }
+        ],
+        "retrieval_trace": {
+          "graph_query_plan": {
+            "query_type": "subgraph",
+            "source_entities": [
+              "煮鸡蛋"
+            ],
+            "target_entities": [],
+            "relation_types": [
+              "REQUIRES",
+              "CONTAINS_STEP"
+            ],
+            "max_depth": 2
+          },
+          "graph_paths": [],
+          "channel_stats": {
+            "candidates": {
+              "dual_level": 32,
+              "vector": 0,
+              "bm25": 40
+            },
+            "final": 2,
+            "channels": [
+              "dual_level",
+              "vector",
+              "bm25"
+            ],
+            "contributed": {
+              "dual_level": 0,
+              "vector": 0,
+              "bm25": 2
+            }
+          },
+          "rerank_stats": {
+            "enabled": true,
+            "applied": true,
+            "candidate_pool": 20,
+            "top_k": 2,
+            "model": "BAAI/bge-reranker-v2-m3"
+          }
+        },
+        "elapsed": 40.6834819316864,
+        "error": false,
+        "timestamp": 1785317521.463
+      }
+    ]
   }
 ]

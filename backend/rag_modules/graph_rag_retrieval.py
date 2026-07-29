@@ -801,11 +801,16 @@ class GraphRAGRetrieval:
             query: 原始查询（当前未使用，预留扩展）
 
         Returns:
-            Document 列表（metadata 含 search_type="graph_path"）
+            Document 列表（metadata 含 search_type="graph_path"）；
+            空路径（无节点）会被跳过，避免"空路径"字符串污染上下文。
         """
         documents = []
 
         for i, path in enumerate(paths):
+            # 空路径防御：遍历时若某条路径没有节点，跳过（不生成占位文档）
+            if not path.nodes:
+                continue
+
             # 构建路径的自然语言描述（"节点A --关系--> 节点B --关系--> 节点C"）
             path_desc = self._build_path_description(path)
 
@@ -850,9 +855,18 @@ class GraphRAGRetrieval:
             query: 原始查询（当前未使用，预留扩展）
 
         Returns:
-            Document 列表（单元素，metadata 含 search_type="knowledge_subgraph"）
+            Document 列表（单元素，metadata 含 search_type="knowledge_subgraph"）；
+            空子图（无中心节点且无连通节点）返回空列表，避免把"关于  的知识网络，
+            包含 0 个相关概念和 0 个关系"这种垃圾文本喂给 LLM。
         """
         documents = []
+
+        # 空结果防御：图查询未匹配到任何节点时不生成 Document，
+        # 否则会产生"关于  的知识网络，包含 0 个..."之类的空壳上下文，
+        # 既占用 top_k 名额又干扰 LLM 判断。
+        if not subgraph.central_nodes and not subgraph.connected_nodes:
+            logger.info("子图为空（无中心/连通节点），跳过 Document 生成")
+            return documents
 
         # 构建子图整体的自然语言描述
         subgraph_desc = self._build_subgraph_description(subgraph)

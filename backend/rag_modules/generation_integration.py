@@ -76,38 +76,20 @@ class GenerationIntegrationModule:
 
         logger.info(f"生成模块初始化完成，模型: {model_name}")
 
-    def generate_adaptive_answer(self, question: str, documents: List[Document]) -> str:
-        """智能统一答案生成（标准模式，一次性返回完整答案）。
-
-        自动适应不同类型的查询，无需预先分类：
-            - 询问多个菜品 -> 提供清晰的列表
-            - 询问具体制作方法 -> 提供详细步骤
-            - 一般性咨询 -> 提供综合性回答
-
-        Args:
-            question: 用户的问题
-            documents: 检索到的相关文档列表（page_content 作为上下文）
-
-        Returns:
-            LLM 生成的完整回答字符串（生成失败时返回错误提示）
-        """
-        # 构建上下文：将检索到的文档内容拼接，保留检索层级标记
+    def _build_prompt(self, question: str, documents: List[Document]) -> str:
+        """构建统一提示词（流式/非流式共用，避免两份模板漂移）。"""
         context_parts = []
-
         for doc in documents:
             content = doc.page_content.strip()
             if content:
-                # 添加检索层级信息（如果有的话，如 [ENTITY] / [TOPIC]）
                 level = doc.metadata.get('retrieval_level', '')
                 if level:
                     context_parts.append(f"[{level.upper()}] {content}")
                 else:
                     context_parts.append(content)
-
         context = "\n\n".join(context_parts)
 
-        # LightRAG 风格的统一提示词（根据问题性质自适应输出格式）
-        prompt = f"""
+        return f"""
         作为一位专业的烹饪助手，请基于以下信息回答用户的问题。
 
         检索到的相关信息：
@@ -123,21 +105,49 @@ class GenerationIntegrationModule:
         回答：
         """
 
-        try:
-            response = self.client.chat.completions.create(
-                model=self.model_name,
-                messages=[
-                    {"role": "user", "content": prompt}
-                ],
-                temperature=self.temperature,
-                max_tokens=self.max_tokens
-            )
+    def generate_adaptive_answer(self, question: str, documents: List[Document], max_retries: int = 3) -> str:
+        """智能统一答案生成（标准模式，一次性返回完整答案）。
 
-            return response.choices[0].message.content.strip()
+        自动适应不同类型的查询，无需预先分类：
+            - 询问多个菜品 -> 提供清晰的列表
+            - 询问具体制作方法 -> 提供详细步骤
+            - 一般性咨询 -> 提供综合性回答
 
-        except Exception as e:
-            logger.error(f"LightRAG答案生成失败: {e}")
-            return f"抱歉，生成回答时出现错误：{str(e)}"
+        与流式版本保持一致的健壮性：timeout=60 + 最多 max_retries 次重试（递增等待），
+        确保评估批处理中遇到 429/超时/网络抖动时不会直接返回错误字符串。
+
+        Args:
+            question: 用户的问题
+            documents: 检索到的相关文档列表（page_content 作为上下文）
+            max_retries: 最大重试次数（默认 3，与流式版本一致）
+
+        Returns:
+            LLM 生成的完整回答字符串（生成失败时返回错误提示）
+        """
+        prompt = self._build_prompt(question, documents)
+
+        last_error = None
+        for attempt in range(max_retries):
+            try:
+                response = self.client.chat.completions.create(
+                    model=self.model_name,
+                    messages=[{"role": "user", "content": prompt}],
+                    temperature=self.temperature,
+                    max_tokens=self.max_tokens,
+                    timeout=60,  # 与流式版本一致，避免长回答卡死
+                )
+                return response.choices[0].message.content.strip()
+
+            except Exception as e:
+                last_error = e
+                logger.warning(f"答案生成第{attempt + 1}次尝试失败: {e}")
+                if attempt < max_retries - 1:
+                    wait_time = (attempt + 1) * 2  # 递增等待（2s / 4s）
+                    time.sleep(wait_time)
+                    continue
+
+        logger.error(f"LightRAG答案生成失败（已重试{max_retries}次）: {last_error}")
+        return f"抱歉，生成回答时出现错误：{str(last_error)}"
 
     def generate_adaptive_answer_stream(self, question: str, documents: List[Document], max_retries: int = 3):
         """LightRAG 风格的流式答案生成（带重试机制）。
@@ -158,36 +168,8 @@ class GenerationIntegrationModule:
             - 所有重试失败后降级为非流式生成（generate_adaptive_answer）
             - 非流式也失败时返回错误提示
         """
-        # 构建上下文（与 generate_adaptive_answer 逻辑一致）
-        context_parts = []
-
-        for doc in documents:
-            content = doc.page_content.strip()
-            if content:
-                level = doc.metadata.get('retrieval_level', '')
-                if level:
-                    context_parts.append(f"[{level.upper()}] {content}")
-                else:
-                    context_parts.append(content)
-
-        context = "\n\n".join(context_parts)
-
-        # LightRAG 风格的统一提示词
-        prompt = f"""
-        作为一位专业的烹饪助手，请基于以下信息回答用户的问题。
-
-        检索到的相关信息：
-        {context}
-
-        用户问题：{question}
-
-        请提供准确、实用的回答。根据问题的性质：
-        - 如果是询问多个菜品，请提供清晰的列表
-        - 如果是询问具体制作方法，请提供详细步骤
-        - 如果是一般性咨询，请提供综合性回答
-
-        回答：
-        """
+        # 复用统一提示词构建逻辑（与非流式版本完全一致，避免模板漂移）
+        prompt = self._build_prompt(question, documents)
 
         # 重试循环：最多尝试 max_retries 次
         for attempt in range(max_retries):

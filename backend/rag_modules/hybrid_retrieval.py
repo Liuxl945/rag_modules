@@ -426,22 +426,42 @@ class HybridRetrievalModule:
         results = []
 
         # 1. 使用图索引进行实体检索（精确匹配）
+        # 用集合去重：同一 keyword 可能命中同一 node_id 多次（如多个 index_keys 匹配）
+        seen_node_ids = set()
         for keyword in entity_keywords:
             # 在键值索引中查找匹配的实体
             entities = self.graph_indexing.get_entities_by_key(keyword)
 
             for entity in entities:
+                node_id = entity.metadata.get("node_id", "")
+                # 跳过本次检索中已添加的节点（避免同一食材被多次加入造成重复上下文）
+                if node_id in seen_node_ids:
+                    continue
+                seen_node_ids.add(node_id)
+
                 # 获取该实体的一跳邻居信息（关联的食材/步骤等）
-                neighbors = self._get_node_neighbors(entity.metadata["node_id"], max_neighbors=2)
+                neighbors = self._get_node_neighbors(node_id, max_neighbors=2)
 
                 # 构建增强内容：原始实体信息 + 邻居信息的拼接输出
-                enhanced_content = entity.value_content
+                # 防御性清理：若 value_content 因去重逻辑累积了重复的"补充信息"块，截断到合理长度
+                base_content = entity.value_content
+                # 超过 500 字符时截断，避免污染上下文（食材实体本身信息本就简短）
+                if len(base_content) > 500:
+                    # 取前 500 字符并在换行处截断
+                    truncated = base_content[:500]
+                    last_nl = truncated.rfind('\n')
+                    if last_nl > 100:
+                        truncated = truncated[:last_nl]
+                    base_content = truncated + "…"
+                enhanced_content = base_content
                 if neighbors:
-                    enhanced_content += f"\n相关信息: {', '.join(neighbors)}"
+                    # 邻居去重
+                    unique_neighbors = list(dict.fromkeys(neighbors))  # 保序去重
+                    enhanced_content += f"\n相关信息: {', '.join(unique_neighbors)}"
 
                 results.append(RetrievalResult(
                     content=enhanced_content,
-                    node_id=entity.metadata["node_id"],
+                    node_id=node_id,
                     node_type=entity.entity_type,
                     relevance_score=0.9,  # 精确匹配得分较高（实体级优先）
                     retrieval_level="entity",

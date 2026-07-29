@@ -442,20 +442,38 @@ class AdvancedGraphRAGSystem:
         start = time.time()
         samples = []
         skipped = 0
-        for it in items:
+        for idx, it in enumerate(items, 1):
             q = (it.get("question") or "").strip() if isinstance(it, dict) else ""
             gt = it.get("ground_truth") if isinstance(it, dict) else None
             if not q:
                 skipped += 1
                 continue
-            # 跑完整 RAG 管线：路由检索 -> 生成答案
-            documents, _ = self.query_router.route_query(q, self.config.top_k)
+            logger.info(f"评估样本 {idx}/{len(items)}: {q[:50]}...")
+            # 跑完整 RAG 管线：路由检索 -> 生成答案（与 /api/query 使用完全相同的管线）
+            documents, analysis = self.query_router.route_query(q, self.config.top_k)
             if not documents:
                 answer = "（无检索结果）"
                 contexts = []
             else:
                 answer = self.generation_module.generate_adaptive_answer(q, documents)
-                contexts = [d.page_content.strip() for d in documents if d.page_content.strip()]
+                # 收集 contexts 时去重（同一 node_id 的多个 chunk 内容可能重复），
+                # 并过滤空串，避免 RAGAS judge 被重复上下文干扰评分。
+                seen_content_hashes = set()
+                contexts = []
+                for d in documents:
+                    content = d.page_content.strip()
+                    if not content:
+                        continue
+                    content_hash = hash(content)
+                    if content_hash in seen_content_hashes:
+                        continue
+                    seen_content_hashes.add(content_hash)
+                    contexts.append(content)
+
+                # 若生成返回了错误字符串，记录告警（说明 LLM 调用失败，该样本分数会异常低）
+                if answer.startswith("抱歉，生成回答时出现错误"):
+                    logger.warning(f"样本 {idx} 生成失败: {answer[:100]}")
+
             samples.append({
                 "question": q,
                 "answer": answer,

@@ -395,22 +395,43 @@ class GraphIndexingModule:
                 # 同名实体（如初始导入产生的多个「鸡蛋」节点）的 value_content 往往逐字相同，
                 # 旧实现会把每个副本整段追加，导致出现几十个重复的
                 # 「补充信息: 食材名称: 鸡蛋 / 类别: 蛋白质」块，污染检索上下文。
-                seen_lines = set(primary_entity.value_content.splitlines())
+                #
+                # 注意：primary_entity.value_content 本身可能已经包含「补充信息:」前缀行
+                # （如嵌套合并场景），splitlines 后这些前缀行也加入 seen_lines，
+                # 但新副本的正文行（"食材名称: 鸡蛋"）已在 seen_lines 中，不会重复追加。
+                seen_lines = set()
+                for line in primary_entity.value_content.splitlines():
+                    stripped = line.strip()
+                    if stripped:
+                        seen_lines.add(stripped)
 
                 for entity_id in entity_ids[1:]:
                     duplicate_entity = self.entity_kv_store[entity_id]
                     # 仅保留主实体中尚未出现的非空行（标题行「食材名称: ...」会因已存在被过滤），
                     # 只有真正带来新信息（如不同的营养/储存字段）时才追加，避免噪声。
-                    new_lines = [
-                        line for line in duplicate_entity.value_content.splitlines()
-                        if line and line not in seen_lines
-                    ]
+                    new_lines = []
+                    for line in duplicate_entity.value_content.splitlines():
+                        stripped = line.strip()
+                        # 跳过空行和已存在的行；也跳过"补充信息:"标记行本身（它不是有效信息）
+                        if stripped and stripped not in seen_lines and not stripped.startswith("补充信息:"):
+                            new_lines.append(stripped)
                     if new_lines:
                         supplement = "\n".join(new_lines)
                         primary_entity.value_content += f"\n\n补充信息: {supplement}"
                         seen_lines.update(new_lines)
                     # 标记删除（即使无新信息也要移除冗余节点）
                     entities_to_remove.append(entity_id)
+
+                # 安全上限：合并后若内容过长（>1000 字符），截断到首个完整块
+                if len(primary_entity.value_content) > 1000:
+                    logger.warning(
+                        f"实体「{name}」去重后内容过长（{len(primary_entity.value_content)}字符），截断到1000字符"
+                    )
+                    truncated = primary_entity.value_content[:1000]
+                    last_nl = truncated.rfind('\n')
+                    if last_nl > 200:
+                        truncated = truncated[:last_nl]
+                    primary_entity.value_content = truncated + "…"
 
         # 删除重复实体
         for entity_id in entities_to_remove:

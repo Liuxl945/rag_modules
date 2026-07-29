@@ -38,8 +38,10 @@ class GraphRAGConfig:
     rerank_max_length: int = 512                    # cross-encoder 单对 (query, doc) 最大 token 数
 
     # 父文档检索配置
-    enable_parent_doc_retrieval: bool = False  # 默认 False，不做父文档回填，直接把chunk当作上下文，有可能会出现步骤不全问题
-    parent_doc_top_n: int = 3                   # 仅 RRF 分前 N 名做父文档替换
+    # 开启后，RRF+rerank 排前 N 的 chunk 会被替换为完整菜谱文档（含食材+步骤），
+    # 避免只检索到"标签"等局部 chunk 导致 LLM 只能从关键词编答案。
+    enable_parent_doc_retrieval: bool = True
+    parent_doc_top_n: int = 5                   # 前 N 名做父文档替换（与 top_k=5 对齐，确保返回的都是完整菜谱）
     parent_doc_max_chars: int = 4000            # 每篇父文档字符上限（兜底）
 
     # BM25 分词缓存配置
