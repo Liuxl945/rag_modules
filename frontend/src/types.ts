@@ -33,6 +33,9 @@ export interface SourceDoc {
   bm25_score?: number | null
   vector_score?: number | null
   dual_score?: number | null
+  // 重排（cross-encoder）元信息
+  rerank_score?: number | null
+  reranked?: boolean | null
   // 图 RAG 路径元信息
   path_length?: number | null
   node_count?: number | null
@@ -81,11 +84,21 @@ export interface ChannelStats {
   contributed: Record<string, number>
 }
 
+/** 重排序（cross-encoder 精排）统计 */
+export interface RerankStats {
+  enabled: boolean
+  applied: boolean
+  candidate_pool: number
+  top_k: number
+  model: string
+}
+
 /** 检索过程轨迹：为什么推荐这些结果 */
 export interface RetrievalTrace {
   graph_query_plan?: GraphQueryPlan | null
   graph_paths: GraphPath[]
   channel_stats?: ChannelStats | null
+  rerank_stats?: RerankStats | null
 }
 
 /** 非流式问答响应 */

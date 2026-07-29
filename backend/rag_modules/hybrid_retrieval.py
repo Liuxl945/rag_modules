@@ -42,6 +42,7 @@ from rank_bm25 import BM25Okapi
 from langchain_core.documents import Document
 from neo4j import GraphDatabase
 from .graph_indexing import GraphIndexingModule, EntityKeyValue, RelationKeyValue
+from .reranker import RerankerModule
 
 logger = logging.getLogger(__name__)
 
@@ -108,6 +109,9 @@ class HybridRetrievalModule:
         # 图索引模块（封装 LightRAG K,V 结构）
         self.graph_indexing = GraphIndexingModule(config, llm_client)
         self.graph_indexed = False
+
+        # 重排序模块（cross-encoder 精排，懒加载：首次 rerank 才加载模型，启动零成本）
+        self.reranker = RerankerModule(config)
 
         # 最近一次 hybrid_search 的通道统计（dict | None），供 Web API 透传到前端
         # 展示三路召回贡献：candidates=各路候选数，final=融合后入选数。
@@ -1228,7 +1232,7 @@ class HybridRetrievalModule:
         return out
 
     def hybrid_search(self, query: str, top_k: int = 5) -> List[Document]:
-        """混合检索：三路召回（图键值双层 + 向量 + BM25）→ RRF 融合。
+        """混合检索：三路召回（图键值双层 + 向量 + BM25）→ RRF 融合 → [可选] Rerank 精排。
 
         这是「传统混合检索」的主接口：
 
@@ -1237,21 +1241,29 @@ class HybridRetrievalModule:
           ┌──────────┬───────────┬──────────┐
           │ 图键值双层  │ Milvus向量  │ BM25关键词 │
           └──────────┴───────────┴──────────┘
-                      ↓ RRF 融合（k=60） ↓
-                  Top-K 文档 → 父文档回填
+                      → RRF 融合（k=60） →
+                  候选池（rerank_candidate_k）
+                      → cross-encoder 精排（enable_rerank 时） →
+                  Top-K 文档 → [可选] 父文档回填
 
         Args:
             query: 用户的自然语言查询
             top_k: 最终返回的文档数量
 
         Returns:
-            Document 列表（metadata 包含 rrf_score, final_score, search_method 等）
+            Document 列表（metadata 包含 rrf_score, final_score, search_method 等；
+            重排启用且模型就绪时额外含 rerank_score, reranked）
         """
         logger.info(f"开始混合检索（dual + vector + bm25, RRF k={_RRF_K}）: {query}")
 
+        # 重排开启时，RRF 先融合出更大的候选池（rerank_candidate_k）送入 cross-encoder 精排；
+        # 关闭时直接融合出 top_k。rrf_k = max(候选池, top_k) 兜底，保证候选 >= 最终返回数。
+        enable_rerank = getattr(self.config, "enable_rerank", False)
+        rerank_candidate_k = getattr(self.config, "rerank_candidate_k", 20)
+        rrf_k = max(rerank_candidate_k, top_k) if enable_rerank else top_k
         # 每路给 RRF 留够候选空间（否则三路各自前 top_k 容易没交集，融合退化）。
-        # candidate_k = max(top_k * 2, 10) 确保至少有 10 个候选进入融合。
-        candidate_k = max(top_k * 2, 10)
+        # candidate_k = max(rrf_k * 2, 10) 确保至少有 10 个候选进入融合。
+        candidate_k = max(rrf_k * 2, 10)
 
         # 三路召回
         dual_docs = self.dual_level_retrieval(query, candidate_k)    # 图键值双层检索（实体级 + 主题级）
@@ -1265,21 +1277,31 @@ class HybridRetrievalModule:
             d.metadata["search_method"] = "vector"               # 标记来源（覆盖）
         # bm25_search 内部已写 search_method=bm25，无需重复标记
 
-        # RRF 融合三路结果（去重 + 加权排名）
-        final_docs = self._rrf_merge(
+        # RRF 融合三路结果（去重 + 加权排名）-> rrf_k 个候选
+        merged_docs = self._rrf_merge(
             ranked_lists=[
                 ("dual_level", dual_docs),  # (source_name, ranked_docs) — source_name 用于 RRF 元信息
                 ("vector", vector_docs),
                 ("bm25", bm25_docs),
             ],
-            top_k=top_k,
+            top_k=rrf_k,
         )
 
+        # 重排精排（开启时）：cross-encoder 对候选池重打分 -> 取 top_k
+        # 模型不可用时 reranker 内部降级，返回 RRF 原顺序前 top_k。
+        rerank_applied = False
+        if enable_rerank:
+            final_docs = self.reranker.rerank(query, merged_docs, top_k)
+            rerank_applied = self.reranker.available
+        else:
+            final_docs = merged_docs[:top_k]
+
         # 父文档回填（可选启用，仅 hybrid_traditional 路；不改排名，仅换上下文内容）
+        # 顺序在 rerank 之后：按精排后的排序对前 top_n 条回填父文档，扩上下文。
         if getattr(self.config, "enable_parent_doc_retrieval", False):
             final_docs = self._attach_parent_documents(final_docs)
 
-        # 缓存通道统计（供 Web API 透传到前端展示三路召回贡献）
+        # 缓存通道统计（供 Web API 透传到前端展示三路召回贡献 + 重排情况）
         self.last_hybrid_stats = {
             "candidates": {
                 "dual_level": len(dual_docs),
@@ -1288,11 +1310,18 @@ class HybridRetrievalModule:
             },
             "final": len(final_docs),
             "channels": ["dual_level", "vector", "bm25"],
+            "rerank": {
+                "enabled": enable_rerank,
+                "applied": rerank_applied,
+                "candidate_pool": len(merged_docs),
+                "top_k": top_k,
+                "model": getattr(self.config, "rerank_model", ""),
+            },
         }
 
         logger.info(
-            f"RRF 融合完成：dual={len(dual_docs)} vector={len(vector_docs)} "
-            f"bm25={len(bm25_docs)} → 最终 {len(final_docs)} 个文档"
+            f"{'RRF+重排' if rerank_applied else 'RRF'} 融合完成：dual={len(dual_docs)} vector={len(vector_docs)} "
+            f"bm25={len(bm25_docs)} → 候选 {len(merged_docs)} → 最终 {len(final_docs)} 个文档"
         )
         return final_docs
 

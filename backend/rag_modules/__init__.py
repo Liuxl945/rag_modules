@@ -5,6 +5,7 @@
 from .graph_data_preparation import GraphDataPreparationModule
 from .milvus_index_construction import MilvusIndexConstructionModule
 from .hybrid_retrieval import HybridRetrievalModule
+from .reranker import RerankerModule
 from .generation_integration import GenerationIntegrationModule
 from .evaluation import RAGASEvaluationModule
 
@@ -12,6 +13,7 @@ __all__ = [
     'GraphDataPreparationModule',
     'MilvusIndexConstructionModule',
     'HybridRetrievalModule',
+    'RerankerModule',
     'GenerationIntegrationModule',
     'RAGASEvaluationModule',
 ] 

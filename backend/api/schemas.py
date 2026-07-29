@@ -37,6 +37,9 @@ class SourceDoc(BaseModel):
     bm25_score: Optional[float] = None
     vector_score: Optional[float] = None
     dual_score: Optional[float] = None
+    # 重排（cross-encoder）元信息
+    rerank_score: Optional[float] = None
+    reranked: Optional[bool] = None
     # 图 RAG 路径元信息
     path_length: Optional[int] = None
     node_count: Optional[int] = None
@@ -102,12 +105,23 @@ class ChannelStats(BaseModel):
     contributed: Dict[str, int] = {}     # 各通道在最终结果中的入选数
 
 
+class RerankStats(BaseModel):
+    """重排序（cross-encoder 精排）统计"""
+
+    enabled: bool = False                # 配置是否启用重排
+    applied: bool = False                # 本次是否实际执行重排（模型就绪时为 True）
+    candidate_pool: int = 0              # 送入重排的候选池大小
+    top_k: int = 0                       # 重排后取的 top_k
+    model: str = ""                      # 使用的重排模型名
+
+
 class RetrievalTrace(BaseModel):
     """检索过程轨迹：为什么推荐这些结果"""
 
     graph_query_plan: Optional[GraphQueryPlan] = None
     graph_paths: List[GraphPath] = []
     channel_stats: Optional[ChannelStats] = None
+    rerank_stats: Optional[RerankStats] = None
 
 
 class QueryResponse(BaseModel):

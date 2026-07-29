@@ -119,8 +119,9 @@ Milvus 向量库（就绪）
   │     ├─ dual_level_retrieval (图键值双层检索，未命中走 Neo4j fulltext 降级)
   │     ├─ vector_search_enhanced (Milvus + 一跳邻居扩展)
   │     ├─ bm25_search (jieba 分词 + 停用词过滤 + BM25)
-  │     └─ _rrf_merge (三路 RRF 融合, k=60) -> Top-K
-  │        └─ [可选] _attach_parent_documents (父文档回填前 N 条)
+  │     ├─ _rrf_merge (三路 RRF 融合, k=60) -> 候选池（rerank_candidate_k=20）
+  │     ├─ [可选] rerank (BAAI/bge-reranker-v2-m3 cross-encoder 精排) -> Top-K
+  │     └─ [可选] _attach_parent_documents (父文档回填前 N 条)
   │
   └─[graph_rag]-> GraphRAGRetrieval.graph_rag_search()
         ├─ understand_graph_query (LLM 转图查询计划 + 5 种 query_type)
@@ -132,6 +133,22 @@ Milvus 向量库（就绪）
   ↓
 最终回答
 ```
+
+### 精确率提升：top_k 收敛 + Rerank 精排（V2.1）
+
+两阶段检索（two-stage retrieval）的标准做法：三路 RRF 先融合出较大候选池（`rerank_candidate_k=20`），再用 cross-encoder 精排，最后只留 top_k=3 喂给 LLM。
+
+- **为什么有效**：bi-encoder（向量检索）query/doc 各自编码，速度快但细粒度匹配弱；cross-encoder（重排器）把 (query, doc) 一起输入，捕捉更细的语义相关性，排在前面的结果质量显著更高。
+- **模型**：`BAAI/bge-reranker-v2-m3`（中文 cross-encoder，~568MB）。
+- **懒加载 + 降级**：首次查询才加载（启动零成本）；模型未缓存/加载失败时自动跳过重排，返回 RRF 原顺序（不影响主流程）。
+- **首次下载**（仅需一次，之后离线可用）：
+  ```bash
+  # 默认从 HuggingFace 下载
+  HF_HUB_OFFLINE=0 python scripts/download_reranker.py
+  # 国内镜像（推荐）
+  HF_ENDPOINT=https://hf-mirror.com HF_HUB_OFFLINE=0 python scripts/download_reranker.py
+  ```
+- **配置**：`config.py` 中 `enable_rerank`（默认 True）、`rerank_candidate_k`（候选池大小）、`top_k`（默认 3，V2 为 5）。
 
 **建议**：拿张纸自己画一遍这个流程图，能默画出来就算掌握 60% 了。
 
@@ -451,3 +468,14 @@ main() -> AdvancedGraphRAGSystem()
 | 生成模块 | 标准生成 | 流式 + 重试（3 次，2/4/6s）+ 降级非流式 |
 | 行号引用 | 旧行号 | 全部更新为当前行号 |
 | 已知问题 | 未列 | 新增 HAS_STEP/CONTAINS_STEP 不一致、配置未接入 .env 等提醒 |
+
+## 附 C：V2.1 精确率提升变更（top_k 收敛 + Rerank 精排）
+
+| 变化点 | V2 | V2.1（当前代码） |
+|--------|----|----|
+| 默认 top_k | 5 | 3（收敛返回块数以降低噪声） |
+| 两阶段精排 | 无 | 三路 RRF 融合出候选池（20）→ `bge-reranker-v2-m3` cross-encoder 精排 → 取 top-3 |
+| 重排模块 | 无 | 新增 `rag_modules/reranker.py`（`RerankerModule`，懒加载 + 可降级） |
+| 前端展示 | 仅通道命中 | 新增 🔁 重排 tag + 重排得分行 |
+| 模型下载 | 无 | `scripts/download_reranker.py` 一次性下载（支持 hf-mirror） |
+| 降级行为 | - | 模型未缓存/加载失败时自动跳过重排，返回 RRF 原顺序 |

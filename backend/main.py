@@ -534,6 +534,9 @@ class AdvancedGraphRAGSystem:
                 "bm25_score": md.get('bm25_score'),
                 "vector_score": md.get('score') if md.get('search_method') == 'vector' or 'rrf_sources' in md else None,
                 "dual_score": md.get('relevance_score') if md.get('search_method') == 'dual_level' else None,
+                # 重排元信息
+                "rerank_score": md.get('rerank_score'),
+                "reranked": md.get('reranked'),
                 # 图 RAG 路径元信息
                 "path_length": md.get('path_length'),
                 "node_count": md.get('node_count'),
@@ -586,6 +589,7 @@ class AdvancedGraphRAGSystem:
 
         # ---- 通道统计部分：hybrid_traditional / combined 时才有意义 ----
         channel_stats = None
+        rerank_stats = None
         if strategy in ("hybrid_traditional", "combined") and self.traditional_retrieval is not None:
             stats = getattr(self.traditional_retrieval, "last_hybrid_stats", None)
             if stats:
@@ -601,11 +605,14 @@ class AdvancedGraphRAGSystem:
                     "channels": stats.get("channels", []),
                     "contributed": contributed,
                 }
+                # 重排统计（是否启用/生效、候选池大小等）
+                rerank_stats = stats.get("rerank")
 
         return {
             "graph_query_plan": graph_query_plan,
             "graph_paths": graph_paths,
             "channel_stats": channel_stats,
+            "rerank_stats": rerank_stats,
         }
 
     def get_system_stats(self) -> dict:

@@ -1,167 +1,76 @@
 [
   {
-    "id": "conv-7",
-    "title": "红烧肉怎么做？",
-    "created_at": 1785223164.4257226,
-    "updated_at": 1785223180.434,
+    "id": "conv-13",
+    "title": "鸡肉配什么蔬菜好？",
+    "created_at": 1785296581.9855263,
+    "updated_at": 1785296829.315,
     "messages": [
       {
-        "id": "msg-17",
+        "id": "msg-31",
         "role": "user",
-        "content": "红烧肉怎么做？",
+        "content": "鸡肉配什么蔬菜好？",
         "analysis": null,
         "sources": null,
         "retrieval_trace": null,
         "elapsed": null,
         "error": false,
-        "timestamp": 1785223164.429
+        "timestamp": 1785296581.991
       },
       {
-        "id": "msg-18",
+        "id": "msg-32",
         "role": "assistant",
-        "content": "您想了解红烧肉的做法，这里为您提供一份经典且详细的 **湖南家常红烧肉** 做法（来自检索信息），步骤清晰，约55分钟即可完成，适合2人份。另外，也附上**简易红烧肉**的要点供您参考（耗时较长但风味更浓郁）。\n\n---\n\n### 🥇 推荐做法：湖南家常红烧肉\n\n**准备时间**：10分钟  \n**烹饪时间**：45分钟  \n**份量**：2人  \n**难度**：★★★☆☆\n\n#### ✅ 食材\n- 五花肉 500克（切2-3厘米块）\n- 白砂糖 30克\n- 姜片、蒜头、葱段 适量\n- 料酒 15毫升、五香粉 2克\n- 生抽 15毫升、老抽 10毫升、蚝油 15毫升\n- 食用油 200毫升（分两次用）\n- 盐 适量\n\n#### 🔥 步骤\n1. **切肉**：五花肉切2-3厘米方块。（2分钟）\n2. **炸肉**：锅中放150毫升油，倒入五花肉炸2分钟，加盐翻炒2分钟，出锅备用。（4分钟）\n3. **炒糖色**：锅中放50毫升油，加白砂糖，小火炒至咖啡色。（2分钟）\n4. **上色**：倒入五花肉翻炒30秒，加姜片、蒜头再炒30秒。（1分钟）\n5. **炖煮**：加料酒、五香粉、葱段，加水没过肉，盖盖煮10分钟。（10分钟）\n6. **调味收汁**：加生抽、老抽、蚝油，中火煮20分钟。（20分钟）\n7. **大火收汁**：开盖，大火烧至汤汁浓稠，出锅。（2分钟）\n\n---\n\n### 🥈 备选做法：简易红烧肉（更入味，耗时约115分钟）\n\n如果您时间充裕，追求更软糯的口感，可参考此做法：\n- **不同点**：\n  - 五花肉切大块（约4.5厘米），先凉水焯水15分钟（加料酒、葱姜去腥）。\n  - 使用炒糖色、花椒、八角、香叶等香料，炖煮50-60分钟（高压锅可缩短至40分钟）。\n  - 中途撇去浮沫浮油，最后收汁至浓稠但不过干。\n\n---\n\n**小提示**：\n- 炒糖色时火候要小，避免发苦。\n- 想要色泽红亮，老抽和糖色是关键。\n- 喜欢辣味可加干辣椒（湘菜风格）。\n\n希望您做出满意的红烧肉！如果有其他具体需求（比如少油、高压锅版本等），欢迎继续提问。",
+        "content": "根据您提供的检索信息，并未直接涉及鸡肉与蔬菜的搭配内容。但基于专业的烹饪知识，我可以为您提供一些经典且实用的鸡肉与蔬菜搭配建议：\n\n**鸡肉（尤其是鸡胸肉、鸡腿肉）与以下蔬菜搭配效果极佳：**\n\n1. **西兰花**：清炒或白灼，口感清脆，与鸡肉的嫩滑互补，营养均衡。\n2. **胡萝卜**：切丁或切片炖煮，颜色鲜艳，甜味能提升鸡肉的鲜美。\n3. **洋葱**：爆香后与鸡肉同炒，能增加层次感，适合黑椒或照烧口味。\n4. **蘑菇（如口蘑、香菇）**：菌菇的鲜味与鸡肉的肉香融合，炖汤或焖烧都很经典。\n5. **彩椒（青、红、黄椒）**：快炒后保留脆甜口感，适合做宫保鸡丁或彩色鸡丁。\n6. **芦笋**：简单焯水后与鸡肉同炒，清爽解腻，适合轻食料理。\n7. **土豆**：切块炖煮，吸收汤汁后绵软，与鸡肉咖喱或红烧是绝配。\n\n**搭配小建议**：\n- 如果追求低脂健康，可选择**蒸、煮、焖**，搭配**西兰花、芦笋、菠菜**等绿叶蔬菜。\n- 如果希望风味浓郁，可用**洋葱、蒜、姜**爆香后，加入**胡萝卜、土豆、青椒**等根茎类蔬菜炖煮。\n\n需要更具体的菜谱或某种烹饪方式的详细步骤，请随时告诉我！",
         "analysis": {
-          "recommended_strategy": "hybrid_traditional",
-          "query_complexity": 0,
-          "relationship_intensity": 0,
-          "reasoning_required": false,
-          "entity_count": 1,
-          "confidence": 0.6,
-          "reasoning": "基于规则的简单分析"
+          "recommended_strategy": "combined",
+          "query_complexity": 0.5,
+          "relationship_intensity": 0.6,
+          "reasoning_required": true,
+          "entity_count": 2,
+          "confidence": 0.8,
+          "reasoning": "该查询需要推荐与鸡肉搭配的蔬菜，涉及实体（鸡肉、蔬菜）间的搭配关系推理。虽然复杂度中等，但可能隐含多跳推理（如考虑烹饪方法、口味平衡或营养搭配），因此适合结合传统检索（直接获取常见搭配列表）和图结构推理（探索食材间的隐性关联）。"
         },
         "sources": [
           {
-            "recipe_name": "湖南家常红烧肉",
-            "search_type": "bm25",
-            "search_method": "bm25",
-            "score": 0.032266458495966696,
-            "final_score": 0.032266458495966696,
-            "content_preview": "# 湖南家常红烧肉\n\n菜系: 湘菜\n难度: 3.0星\n\n时间信息: 准备时间: 约10分钟, 烹饪时间: 约45分钟\n份量: 2人",
-            "node_id": "201002837",
-            "chunk_id": "201002837_chunk_559",
-            "chunk_index": 0,
-            "total_chunks": 4,
-            "section_title": "主标题",
+            "recipe_name": "未知菜品",
+            "search_type": "dual_level",
+            "search_method": "dual_level",
+            "score": 0.02976190476190476,
+            "final_score": 0.02976190476190476,
+            "content_preview": "主题: 食材搭配\n关系类型: REQUIRES\n源实体: 水煮鱼 (Recipe)\n目标实体: 巴沙鱼 (Ingredient)\n相关菜品: 水煮鱼\n相关信息: 巴沙鱼\n菜品详情: 菜品名称: 水煮鱼",
+            "node_id": "201000040",
+            "chunk_id": null,
+            "chunk_index": null,
+            "total_chunks": null,
+            "section_title": null,
             "rrf_sources": [
-              "vector",
+              "dual_level",
               "bm25"
             ],
             "rrf_ranks": {
-              "vector": 3,
-              "bm25": 1
+              "dual_level": 3,
+              "bm25": 12
             },
             "rrf_raw_scores": {
-              "vector": 0.7206828594207764,
-              "bm25": 8.194273165395632
+              "dual_level": 0.95,
+              "bm25": 6.081386931483141
             },
-            "bm25_score": 8.194273165395632,
+            "bm25_score": null,
             "vector_score": null,
-            "dual_score": null,
+            "dual_score": 0.95,
+            "rerank_score": null,
+            "reranked": null,
             "path_length": null,
             "node_count": null,
             "relationship_count": null
           },
           {
-            "recipe_name": "徽派红烧肉",
-            "search_type": "vector_enhanced",
-            "search_method": "vector",
-            "score": 0.03225806451612903,
-            "final_score": 0.03225806451612903,
-            "content_preview": "## 制作步骤\n\n### 第1步\n步骤: 步骤1\n描述: 五花肉切块，每块2-3 cm大小\n方法: 切\n工具: 刀,案板\n时间: 约2分钟\n\n### 第2步\n步骤: 步骤2\n描述: 锅中加入150 ml食用油，倒入五花肉，煎炸2分钟后，加入盐，翻炒五花肉，2分钟后出锅\n方法: 炸,炒\n工具: 炒锅,锅铲\n时间: 4分钟\n\n### 第3步\n步骤: 步骤3\n描述: 锅中加入50 ml食用油，倒入白砂糖，翻炒到咖啡色\n方法: 炒\n工具: 炒锅,锅铲\n时间: 约2分钟\n\n### 第4步\n步骤: 步骤4\n描述: 倒入五花肉，翻炒30秒后，加入姜片、蒜头后翻炒30秒\n方法: 炒\n工具: 炒锅,锅铲\n时间:",
-            "node_id": "201002627",
-            "chunk_id": "201002627_chunk_529",
-            "chunk_index": null,
-            "total_chunks": null,
-            "section_title": null,
-            "rrf_sources": [
-              "vector",
-              "bm25"
-            ],
-            "rrf_ranks": {
-              "vector": 2,
-              "bm25": 2
-            },
-            "rrf_raw_scores": {
-              "vector": 0.7260499000549316,
-              "bm25": 8.003098557135884
-            },
-            "bm25_score": null,
-            "vector_score": 0.7260499000549316,
-            "dual_score": null,
-            "path_length": null,
-            "node_count": null,
-            "relationship_count": null
-          },
-          {
-            "recipe_name": "简易红烧肉",
-            "search_type": "vector_enhanced",
-            "search_method": "vector",
-            "score": 0.031544957774465976,
-            "final_score": 0.031544957774465976,
-            "content_preview": "# 简易红烧肉\n难度: 3.0星\n\n时间信息: 准备时间: 约20分钟（切肉、焯水、准备配料）, 烹饪时间: 约95分钟（焯水15分钟+煎肉+炖煮80分钟）\n份量: 2-3人\n\n相关信息: 三星, Recipe, 荤菜",
-            "node_id": "201003002",
-            "chunk_id": "201003002_chunk_591",
-            "chunk_index": null,
-            "total_chunks": null,
-            "section_title": null,
-            "rrf_sources": [
-              "vector",
-              "bm25"
-            ],
-            "rrf_ranks": {
-              "vector": 1,
-              "bm25": 6
-            },
-            "rrf_raw_scores": {
-              "vector": 0.7415480613708496,
-              "bm25": 7.359248815525155
-            },
-            "bm25_score": null,
-            "vector_score": 0.7415480613708496,
-            "dual_score": null,
-            "path_length": null,
-            "node_count": null,
-            "relationship_count": null
-          },
-          {
-            "recipe_name": "南派红烧肉",
-            "search_type": "vector_enhanced",
-            "search_method": "vector",
-            "score": 0.02967032967032967,
-            "final_score": 0.02967032967032967,
-            "content_preview": "## 制作步骤\n\n### 第1步\n步骤: 步骤1\n描述: 将猪五花肉切成约4.5厘米的大块；生姜切成约3毫米厚的片；小葱白色部分切段；蒜中间切开备用。\n方法: 切\n工具: 刀,案板\n时间: 约5-10分钟\n\n### 第2步\n步骤: 步骤2\n描述: 将一半葱姜取出，剩余生姜、葱白、蒜、花椒、八角、香叶放入碗中备用。\n方法: 备料\n工具: 碗\n时间: 约2分钟\n\n### 第3步\n步骤: 步骤3\n描述: 凉水中放入切好的五花肉、料酒和2/5的葱姜，煮15分钟去腥，捞出洗净。\n方法: 焯水,煮\n工具: 锅\n时间: 15分钟\n\n### 第4步\n步骤: 步骤4\n描述: 按简易版炒糖色教程，采用操作2炒糖色",
-            "node_id": "201002978",
-            "chunk_id": "201002978_chunk_589",
-            "chunk_index": null,
-            "total_chunks": null,
-            "section_title": null,
-            "rrf_sources": [
-              "vector",
-              "bm25"
-            ],
-            "rrf_ranks": {
-              "vector": 5,
-              "bm25": 10
-            },
-            "rrf_raw_scores": {
-              "vector": 0.6981983780860901,
-              "bm25": 6.949265047323629
-            },
-            "bm25_score": null,
-            "vector_score": 0.6981983780860901,
-            "dual_score": null,
-            "path_length": null,
-            "node_count": null,
-            "relationship_count": null
-          },
-          {
-            "recipe_name": "五花肉",
+            "recipe_name": "未知菜品",
             "search_type": "dual_level",
             "search_method": "dual_level",
             "score": 0.01639344262295082,
             "final_score": 0.01639344262295082,
-            "content_preview": "食材名称: 五花肉\n类别: 蛋白质\n\n补充信息: 食材名称: 五花肉\n类别: 蛋白质\n\n补充信息: 食材名称: 五花肉\n类别: 蛋白质\n\n补充信息: 食材名称: 五花肉\n类别: 蛋白质\n\n补充信息: 食材名称: 五花肉\n类别: 蛋白质\n\n补充信息: 食材名称: 五花肉\n类别: 蛋白质\n\n补充信息: 食材名称: 五花肉\n类别: 蛋白质\n\n补充信息: 食材名称: 五花肉\n类别: 蛋白质\n\n补充信息: 食材名称: 五花肉\n类别: 蛋白质\n\n补充信息: 食材名称: 五花肉\n类别: 蛋白质\n\n补充信息: 食材名称: 五花肉\n类别: 蛋白质\n\n补充信息: 食材名称: 五花肉\n类别: 蛋白质\n\n补充信息: ",
-            "node_id": "201000129",
+            "content_preview": "主题: 食材搭配\n关系类型: REQUIRES\n源实体: 咖喱炒蟹 (Recipe)\n目标实体: 青蟹 (Ingredient)\n相关菜品: 咖喱炒蟹\n相关信息: 青蟹\n菜品详情: 菜品名称: 咖喱炒蟹",
+            "node_id": "201000001",
             "chunk_id": null,
             "chunk_index": null,
             "total_chunks": null,
@@ -173,357 +82,13 @@
               "dual_level": 1
             },
             "rrf_raw_scores": {
-              "dual_level": 0.9
+              "dual_level": 0.95
             },
             "bm25_score": null,
             "vector_score": null,
-            "dual_score": 0.9,
-            "path_length": null,
-            "node_count": null,
-            "relationship_count": null
-          }
-        ],
-        "retrieval_trace": {
-          "graph_query_plan": null,
-          "graph_paths": [],
-          "channel_stats": {
-            "candidates": {
-              "dual_level": 3,
-              "vector": 10,
-              "bm25": 10
-            },
-            "final": 5,
-            "channels": [
-              "dual_level",
-              "vector",
-              "bm25"
-            ],
-            "contributed": {
-              "dual_level": 1,
-              "vector": 4,
-              "bm25": 4
-            }
-          }
-        },
-        "elapsed": 15.980454921722412,
-        "error": false,
-        "timestamp": 1785223180.434
-      }
-    ]
-  },
-  {
-    "id": "conv-8",
-    "title": "川菜有哪些特色菜？",
-    "created_at": 1785225344.873898,
-    "updated_at": 1785225355.25,
-    "messages": [
-      {
-        "id": "msg-19",
-        "role": "user",
-        "content": "川菜有哪些特色菜？",
-        "analysis": null,
-        "sources": null,
-        "retrieval_trace": null,
-        "elapsed": null,
-        "error": false,
-        "timestamp": 1785225344.881
-      },
-      {
-        "id": "msg-21",
-        "role": "assistant",
-        "content": "根据检索到的信息，川菜中有以下特色菜品推荐：\n\n- **麻婆豆腐**（荤菜，难度3星）：经典川菜，麻辣鲜香，是川菜的代表之一。\n- **酸辣土豆丝**（素菜，难度2星）：家常川菜，酸辣爽口，制作快捷。\n- **凉粉**（素菜，难度3星）：清爽开胃，适合夏季食用。\n- **回锅肉**（荤菜，难度4星）：川菜经典，肥而不腻，口味浓郁。\n\n这些菜品涵盖了荤素不同类别，体现了川菜麻辣、酸辣、鲜香等多样风味。如需了解具体做法，请进一步提问。",
-        "analysis": {
-          "recommended_strategy": "hybrid_traditional",
-          "query_complexity": 0,
-          "relationship_intensity": 0,
-          "reasoning_required": false,
-          "entity_count": 1,
-          "confidence": 0.6,
-          "reasoning": "基于规则的简单分析"
-        },
-        "sources": [
-          {
-            "recipe_name": "麻婆豆腐",
-            "search_type": "dual_level",
-            "search_method": "dual_level",
-            "score": 0.046759212119155104,
-            "final_score": 0.046759212119155104,
-            "content_preview": "菜品名称: 麻婆豆腐\n分类: 荤菜\n菜系: 川菜\n难度: 3.0\n相关信息: 三星, Recipe",
-            "node_id": "201003481",
-            "chunk_id": null,
-            "chunk_index": null,
-            "total_chunks": null,
-            "section_title": null,
-            "rrf_sources": [
-              "dual_level",
-              "vector",
-              "bm25"
-            ],
-            "rrf_ranks": {
-              "dual_level": 1,
-              "vector": 3,
-              "bm25": 9
-            },
-            "rrf_raw_scores": {
-              "dual_level": 0.9,
-              "vector": 0.6052474975585938,
-              "bm25": 5.198885543000431
-            },
-            "bm25_score": null,
-            "vector_score": null,
-            "dual_score": 0.9,
-            "path_length": null,
-            "node_count": null,
-            "relationship_count": null
-          },
-          {
-            "recipe_name": "酸辣土豆丝",
-            "search_type": "vector_enhanced",
-            "search_method": "vector",
-            "score": 0.0454615036704589,
-            "final_score": 0.0454615036704589,
-            "content_preview": "# 酸辣土豆丝\n\n菜系: 川菜\n难度: 2.0星\n\n时间信息: 准备时间: 10分钟, 烹饪时间: 5分钟\n份量: 1人份\n\n相关信息: 二星, Recipe, 素菜",
-            "node_id": "201005195",
-            "chunk_id": "201005195_chunk_1030",
-            "chunk_index": null,
-            "total_chunks": null,
-            "section_title": null,
-            "rrf_sources": [
-              "dual_level",
-              "vector",
-              "bm25"
-            ],
-            "rrf_ranks": {
-              "dual_level": 7,
-              "vector": 5,
-              "bm25": 6
-            },
-            "rrf_raw_scores": {
-              "dual_level": 0.75,
-              "vector": 0.5944603681564331,
-              "bm25": 5.230499112263764
-            },
-            "bm25_score": null,
-            "vector_score": 0.5944603681564331,
-            "dual_score": null,
-            "path_length": null,
-            "node_count": null,
-            "relationship_count": null
-          },
-          {
-            "recipe_name": "凉粉",
-            "search_type": "bm25",
-            "search_method": "bm25",
-            "score": 0.04419642857142857,
-            "final_score": 0.04419642857142857,
-            "content_preview": "# 凉粉\n\n菜系: 川菜\n难度: 3.0星\n\n时间信息: 准备时间: 5分钟, 烹饪时间: 10分钟\n份量: 1人份",
-            "node_id": "201004407",
-            "chunk_id": "201004407_chunk_876",
-            "chunk_index": 0,
-            "total_chunks": 4,
-            "section_title": "主标题",
-            "rrf_sources": [
-              "dual_level",
-              "vector",
-              "bm25"
-            ],
-            "rrf_ranks": {
-              "dual_level": 10,
-              "vector": 10,
-              "bm25": 4
-            },
-            "rrf_raw_scores": {
-              "dual_level": 0.75,
-              "vector": 0.5813827514648438,
-              "bm25": 5.262499507599597
-            },
-            "bm25_score": 5.262499507599597,
-            "vector_score": null,
-            "dual_score": null,
-            "path_length": null,
-            "node_count": null,
-            "relationship_count": null
-          },
-          {
-            "recipe_name": "水煮牛肉",
-            "search_type": "vector_enhanced",
-            "search_method": "vector",
-            "score": 0.03252247488101534,
-            "final_score": 0.03252247488101534,
-            "content_preview": "## 标签\n麻辣鲜香,川菜经典\n相关信息: 三星, Recipe, 荤菜",
-            "node_id": "201002797",
-            "chunk_id": "201002797_chunk_554",
-            "chunk_index": null,
-            "total_chunks": null,
-            "section_title": null,
-            "rrf_sources": [
-              "vector",
-              "bm25"
-            ],
-            "rrf_ranks": {
-              "vector": 1,
-              "bm25": 2
-            },
-            "rrf_raw_scores": {
-              "vector": 0.6169362664222717,
-              "bm25": 5.996199049358088
-            },
-            "bm25_score": null,
-            "vector_score": 0.6169362664222717,
-            "dual_score": null,
-            "path_length": null,
-            "node_count": null,
-            "relationship_count": null
-          },
-          {
-            "recipe_name": "回锅肉",
-            "search_type": "dual_level",
-            "search_method": "dual_level",
-            "score": 0.03055037313432836,
-            "final_score": 0.03055037313432836,
-            "content_preview": "菜品名称: 回锅肉\n分类: 荤菜\n菜系: 川菜\n难度: 4.0\n相关信息: 四星, Recipe",
-            "node_id": "201002350",
-            "chunk_id": null,
-            "chunk_index": null,
-            "total_chunks": null,
-            "section_title": null,
-            "rrf_sources": [
-              "dual_level",
-              "vector"
-            ],
-            "rrf_ranks": {
-              "dual_level": 4,
-              "vector": 7
-            },
-            "rrf_raw_scores": {
-              "dual_level": 0.9,
-              "vector": 0.5936106443405151
-            },
-            "bm25_score": null,
-            "vector_score": null,
-            "dual_score": 0.9,
-            "path_length": null,
-            "node_count": null,
-            "relationship_count": null
-          }
-        ],
-        "retrieval_trace": {
-          "graph_query_plan": null,
-          "graph_paths": [],
-          "channel_stats": {
-            "candidates": {
-              "dual_level": 10,
-              "vector": 10,
-              "bm25": 10
-            },
-            "final": 5,
-            "channels": [
-              "dual_level",
-              "vector",
-              "bm25"
-            ],
-            "contributed": {
-              "dual_level": 4,
-              "vector": 5,
-              "bm25": 4
-            }
-          }
-        },
-        "elapsed": 10.339046955108643,
-        "error": false,
-        "timestamp": 1785225355.25
-      }
-    ]
-  },
-  {
-    "id": "conv-9",
-    "title": "鸡肉配什么蔬菜好？",
-    "created_at": 1785225346.3130088,
-    "updated_at": 1785225369.295,
-    "messages": [
-      {
-        "id": "msg-20",
-        "role": "user",
-        "content": "鸡肉配什么蔬菜好？",
-        "analysis": null,
-        "sources": null,
-        "retrieval_trace": null,
-        "elapsed": null,
-        "error": false,
-        "timestamp": 1785225346.318
-      },
-      {
-        "id": "msg-22",
-        "role": "assistant",
-        "content": "根据您检索到的菜谱（类似口水鸡或麻辣鸡），这道菜本身是凉菜或热菜，重点在于鸡肉的嫩滑和红油的香辣。不过，鸡肉与蔬菜的搭配非常灵活，以下是一些实用的建议，分为**配菜搭配**和**佐餐蔬菜**两类：\n\n---\n\n### 一、作为同一道菜中的配菜（与鸡肉一起烹饪）\n\n如果您希望将蔬菜与鸡肉同煮或同炒，以下蔬菜非常契合这道菜的西北风味和红油调味：\n\n| 蔬菜 | 推荐理由 | 搭配方式 |\n|------|----------|----------|\n| 土豆 | 吸收酱汁，软糯入味，与“可配皮带面”的汤汁很搭 | 切块炖煮，或切条油炸后拌入 |\n| 青椒/红椒 | 增加清脆口感和色彩，解腻 | 切块快炒，或在最后一步撒在鸡肉上 |\n| 洋葱 | 炒香后甜味突出，能提升复合香气 | 切丝或块，与葱段一同炒制 |\n| 香菇/杏鲍菇 | 菌菇的鲜味与鸡肉、红油融合 | 切片焯水或煸炒后拌入 |\n| 豆芽/黄瓜 | 清爽脆嫩，平衡油腻感 | 焯水后垫底，或生黄瓜丝撒在鸡肉上 |\n\n### 二、作为佐餐配菜（单独制作搭配鸡肉）\n\n这道菜的特点是“红油香辣、鸡肉嫩滑”，搭配清淡或微酸的蔬菜能形成味觉平衡，推荐：\n\n- **凉拌菠菜**：焯水后加蒜末、醋、少许盐，清淡解辣。\n- **蒜蓉西兰花**：简单的清炒或白灼，保持蔬菜原味。\n- **糖拌西红柿**：酸甜口感能有效中和辣味。\n- **酸辣土豆丝**：如果喜欢重口味，土豆丝与红油鸡是经典西北组合。\n\n### 三、特别提示（基于您检索到的菜谱）\n\n菜谱中第12步是“鸡肉上撒花生碎，淋红油”，没有加入蔬菜，说明这道菜本身是纯粹的肉食主菜。此时，推荐的蔬菜更建议作为**独立配菜**上桌，避免破坏红油的纯粹风味。如果您想在同一盘中加入蔬菜，可以尝试在**第12步**之前，将焯过水的**豆芽或黄瓜条**铺在盘底，再放上鸡肉、淋红油，这样蔬菜会吸收底部的酱汁，非常美味。\n\n---\n\n**总结**：如果您想保留菜谱原味，建议用**黄瓜、豆芽**做垫底蔬菜；如果想丰富口感，**土豆、青椒、洋葱**是最适合与鸡肉同炖或同炒的蔬菜。",
-        "analysis": {
-          "recommended_strategy": "combined",
-          "query_complexity": 0.5,
-          "relationship_intensity": 0.6,
-          "reasoning_required": false,
-          "entity_count": 2,
-          "confidence": 0.8,
-          "reasoning": "查询涉及鸡肉与蔬菜的搭配关系，属于中等复杂度的实体间关系查询。虽然需要从类别‘蔬菜’中筛选具体选项，但无需多步推理或因果分析，主要依赖食谱知识或营养搭配常识。推荐结合传统检索（获取常见搭配文档）与图结构（捕捉鸡肉与各类蔬菜的营养/口味关系）以获得全面结果。"
-        },
-        "sources": [
-          {
-            "recipe_name": "新疆大盘鸡",
-            "search_type": "bm25",
-            "search_method": "bm25",
-            "score": 0.030679156908665108,
-            "final_score": 0.030679156908665108,
-            "content_preview": "## 标签\n可配皮带面,西北风味,炒糖色,慢炖入味",
-            "node_id": "201002647",
-            "chunk_id": "201002647_chunk_534",
-            "chunk_index": 3,
-            "total_chunks": 4,
-            "section_title": "标签",
-            "rrf_sources": [
-              "vector",
-              "bm25"
-            ],
-            "rrf_ranks": {
-              "vector": 10,
-              "bm25": 1
-            },
-            "rrf_raw_scores": {
-              "vector": 0.5427743196487427,
-              "bm25": 9.059954495806112
-            },
-            "bm25_score": 9.059954495806112,
-            "vector_score": null,
-            "dual_score": null,
-            "path_length": null,
-            "node_count": null,
-            "relationship_count": null
-          },
-          {
-            "recipe_name": "口水鸡",
-            "search_type": "vector_enhanced",
-            "search_method": "vector",
-            "score": 0.030621785881252923,
-            "final_score": 0.030621785881252923,
-            "content_preview": "## 制作步骤\n\n### 第1步\n步骤: 步骤1\n描述: 姜切片，1颗小葱切段，15颗花椒备用\n方法: 切\n工具: 刀,案板\n时间: 2分钟\n\n### 第2步\n步骤: 步骤2\n描述: 鸡肉洗净，放入锅中，加清水没过鸡肉，放入姜片、葱段和花椒，大火烧开\n方法: 煮\n工具: 锅\n时间: 5分钟\n\n### 第3步\n步骤: 步骤3\n描述: 水开后转中小火煮20分钟，关火\n方法: 煮\n工具: 锅\n时间: 20分钟\n\n### 第4步\n步骤: 步骤4\n描述: 取出鸡肉，放入冰水中迅速冷却至冰凉\n方法: 冷却\n工具: 盆,冰水\n时间: 5分钟\n\n### 第5步\n步骤: 步骤5\n描述: 取出鸡肉，切块摆盘备用\n",
-            "node_id": "201002255",
-            "chunk_id": "201002255_chunk_465",
-            "chunk_index": null,
-            "total_chunks": null,
-            "section_title": null,
-            "rrf_sources": [
-              "vector",
-              "bm25"
-            ],
-            "rrf_ranks": {
-              "vector": 2,
-              "bm25": 9
-            },
-            "rrf_raw_scores": {
-              "vector": 0.5702293515205383,
-              "bm25": 6.29790596040803
-            },
-            "bm25_score": null,
-            "vector_score": 0.5702293515205383,
-            "dual_score": null,
+            "dual_score": 0.95,
+            "rerank_score": null,
+            "reranked": null,
             "path_length": null,
             "node_count": null,
             "relationship_count": null
@@ -541,14 +106,14 @@
             "relation_types": [
               "REQUIRES"
             ],
-            "max_depth": 2
+            "max_depth": 3
           },
           "graph_paths": [],
           "channel_stats": {
             "candidates": {
-              "dual_level": 0,
-              "vector": 10,
-              "bm25": 10
+              "dual_level": 13,
+              "vector": 0,
+              "bm25": 40
             },
             "final": 2,
             "channels": [
@@ -557,15 +122,239 @@
               "bm25"
             ],
             "contributed": {
-              "dual_level": 0,
-              "vector": 2,
-              "bm25": 2
+              "dual_level": 2,
+              "vector": 0,
+              "bm25": 1
             }
+          },
+          "rerank_stats": {
+            "enabled": true,
+            "applied": false,
+            "candidate_pool": 20,
+            "top_k": 2,
+            "model": "BAAI/bge-reranker-v2-m3"
           }
         },
-        "elapsed": 22.969719648361206,
+        "elapsed": 247.31685495376587,
         "error": false,
-        "timestamp": 1785225369.295
+        "timestamp": 1785296829.315
+      }
+    ]
+  },
+  {
+    "id": "conv-14",
+    "title": "鸡肉配什么蔬菜好？",
+    "created_at": 1785298418.8124607,
+    "updated_at": 1785298613.786,
+    "messages": [
+      {
+        "id": "msg-33",
+        "role": "user",
+        "content": "鸡肉配什么蔬菜好？",
+        "analysis": null,
+        "sources": null,
+        "retrieval_trace": null,
+        "elapsed": null,
+        "error": false,
+        "timestamp": 1785298418.817
+      },
+      {
+        "id": "msg-34",
+        "role": "assistant",
+        "content": "根据您提供的食材信息，鸡肉非常适合搭配以下蔬菜，并可以结合对应的风味和做法来烹饪：\n\n- **西兰花**：适合制作**巴基斯坦风味**的鸡肉炖菜。  \n  **做法建议**：将鸡肉炒糖色后，与西兰花一起慢炖，加入辣椒等香料，最后配烙饼、馕或米饭食用。西兰花的清甜能平衡鸡肉的浓郁。\n\n- **胡萝卜**：可作为基础配菜，搭配鸡肉进行**西北风味**的烹饪。  \n  **做法建议**：鸡肉炒糖色后，加入胡萝卜块一起慢炖（如新疆大盘鸡），胡萝卜的甜味与鸡肉的鲜香融合，适合搭配皮带面。\n\n另外，虽然未在检索信息中明确列出，但常见搭配还包括洋葱、土豆（用于炖菜）、青椒（用于炒菜或烧烤）等。如果您的烹饪方向偏**西北风味**，建议优先选择胡萝卜；若想尝试**异国口味**，则西兰花更合适。",
+        "analysis": {
+          "recommended_strategy": "hybrid_traditional",
+          "query_complexity": 0.4,
+          "relationship_intensity": 0.5,
+          "reasoning_required": false,
+          "entity_count": 2,
+          "confidence": 0.9,
+          "reasoning": "查询询问鸡肉与蔬菜的搭配，属于中等偏简单的信息查找。主要实体为‘鸡肉’和‘蔬菜’（泛类），关系为‘搭配’，无需多跳推理或因果分析。常见烹饪知识可通过传统检索或混合检索高效获取，因此推荐hybrid_traditional策略。"
+        },
+        "sources": [
+          {
+            "recipe_name": "鸡肉",
+            "search_type": "dual_level",
+            "search_method": "dual_level",
+            "score": 0.01639344262295082,
+            "final_score": 0.01639344262295082,
+            "content_preview": "食材名称: 鸡肉\n类别: 蛋白质\n相关信息: Ingredient, 蛋白质",
+            "node_id": "201004679",
+            "chunk_id": null,
+            "chunk_index": null,
+            "total_chunks": null,
+            "section_title": null,
+            "rrf_sources": [
+              "dual_level"
+            ],
+            "rrf_ranks": {
+              "dual_level": 1
+            },
+            "rrf_raw_scores": {
+              "dual_level": 0.9
+            },
+            "bm25_score": null,
+            "vector_score": null,
+            "dual_score": 0.9,
+            "rerank_score": null,
+            "reranked": null,
+            "path_length": null,
+            "node_count": null,
+            "relationship_count": null
+          },
+          {
+            "recipe_name": "新疆大盘鸡",
+            "search_type": "bm25",
+            "search_method": "bm25",
+            "score": 0.01639344262295082,
+            "final_score": 0.01639344262295082,
+            "content_preview": "## 标签\n可配皮带面,西北风味,炒糖色,慢炖入味",
+            "node_id": "201002647",
+            "chunk_id": "201002647_chunk_534",
+            "chunk_index": 3,
+            "total_chunks": 4,
+            "section_title": "标签",
+            "rrf_sources": [
+              "bm25"
+            ],
+            "rrf_ranks": {
+              "bm25": 1
+            },
+            "rrf_raw_scores": {
+              "bm25": 9.059954495806112
+            },
+            "bm25_score": 9.059954495806112,
+            "vector_score": null,
+            "dual_score": null,
+            "rerank_score": null,
+            "reranked": null,
+            "path_length": null,
+            "node_count": null,
+            "relationship_count": null
+          },
+          {
+            "recipe_name": "西兰花",
+            "search_type": "dual_level",
+            "search_method": "dual_level",
+            "score": 0.016129032258064516,
+            "final_score": 0.016129032258064516,
+            "content_preview": "食材名称: 西兰花\n类别: 蔬菜\n相关信息: Ingredient, 蔬菜",
+            "node_id": "201005130",
+            "chunk_id": null,
+            "chunk_index": null,
+            "total_chunks": null,
+            "section_title": null,
+            "rrf_sources": [
+              "dual_level"
+            ],
+            "rrf_ranks": {
+              "dual_level": 2
+            },
+            "rrf_raw_scores": {
+              "dual_level": 0.9
+            },
+            "bm25_score": null,
+            "vector_score": null,
+            "dual_score": 0.9,
+            "rerank_score": null,
+            "reranked": null,
+            "path_length": null,
+            "node_count": null,
+            "relationship_count": null
+          },
+          {
+            "recipe_name": "巴基斯坦牛肉咖喱",
+            "search_type": "bm25",
+            "search_method": "bm25",
+            "score": 0.016129032258064516,
+            "final_score": 0.016129032258064516,
+            "content_preview": "## 标签\n巴基斯坦风味,偏辣,慢炖,配烙饼/馕/米饭,正宗做法",
+            "node_id": "201002555",
+            "chunk_id": "201002555_chunk_518",
+            "chunk_index": 3,
+            "total_chunks": 4,
+            "section_title": "标签",
+            "rrf_sources": [
+              "bm25"
+            ],
+            "rrf_ranks": {
+              "bm25": 2
+            },
+            "rrf_raw_scores": {
+              "bm25": 8.883977326534811
+            },
+            "bm25_score": 8.883977326534811,
+            "vector_score": null,
+            "dual_score": null,
+            "rerank_score": null,
+            "reranked": null,
+            "path_length": null,
+            "node_count": null,
+            "relationship_count": null
+          },
+          {
+            "recipe_name": "胡萝卜",
+            "search_type": "dual_level",
+            "search_method": "dual_level",
+            "score": 0.015873015873015872,
+            "final_score": 0.015873015873015872,
+            "content_preview": "食材名称: 胡萝卜\n类别: 蔬菜\n相关信息: Ingredient, 蔬菜",
+            "node_id": "201001855",
+            "chunk_id": null,
+            "chunk_index": null,
+            "total_chunks": null,
+            "section_title": null,
+            "rrf_sources": [
+              "dual_level"
+            ],
+            "rrf_ranks": {
+              "dual_level": 3
+            },
+            "rrf_raw_scores": {
+              "dual_level": 0.9
+            },
+            "bm25_score": null,
+            "vector_score": null,
+            "dual_score": 0.9,
+            "rerank_score": null,
+            "reranked": null,
+            "path_length": null,
+            "node_count": null,
+            "relationship_count": null
+          }
+        ],
+        "retrieval_trace": {
+          "graph_query_plan": null,
+          "graph_paths": [],
+          "channel_stats": {
+            "candidates": {
+              "dual_level": 11,
+              "vector": 0,
+              "bm25": 40
+            },
+            "final": 5,
+            "channels": [
+              "dual_level",
+              "vector",
+              "bm25"
+            ],
+            "contributed": {
+              "dual_level": 3,
+              "vector": 0,
+              "bm25": 2
+            }
+          },
+          "rerank_stats": {
+            "enabled": true,
+            "applied": false,
+            "candidate_pool": 20,
+            "top_k": 5,
+            "model": "BAAI/bge-reranker-v2-m3"
+          }
+        },
+        "elapsed": 194.94894909858704,
+        "error": false,
+        "timestamp": 1785298613.786
       }
     ]
   }

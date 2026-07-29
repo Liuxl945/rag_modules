@@ -26,7 +26,16 @@ class GraphRAGConfig:
     llm_model: str = "deepseek-v4-flash"
 
     # 检索配置（LightRAG Round-robin策略）
+    # top_k 收敛到 3：减少喂给 LLM 的文档块数量以降低噪声、提升精确率。
+    # 配合 enable_rerank 精排，头部质量更高，减少返回数量不会丢关键信息。
     top_k: int = 5
+
+    # 重排序（Rerank）配置 - cross-encoder 对初检（RRF 融合）结果精排，把最相关文档排前面再取 top_k。
+    # 标准 two-stage retrieval：召回较多候选 -> cross-encoder 精排 -> 只留 top_k。
+    enable_rerank: bool = True                     # 默认开启；模型未缓存时自动降级（跳过重排，返回 RRF 顺序）
+    rerank_model: str = "BAAI/bge-reranker-v2-m3"  # 中文 cross-encoder 重排器（首次需下载，见 scripts/download_reranker.py）
+    rerank_candidate_k: int = 20                    # 送入重排的候选池大小（应 >= top_k；越大越准但越慢）
+    rerank_max_length: int = 512                    # cross-encoder 单对 (query, doc) 最大 token 数
 
     # 父文档检索配置
     enable_parent_doc_retrieval: bool = False  # 默认 False，不做父文档回填，直接把chunk当作上下文，有可能会出现步骤不全问题
@@ -72,6 +81,10 @@ class GraphRAGConfig:
             'embedding_model': self.embedding_model,
             'llm_model': self.llm_model,
             'top_k': self.top_k,
+            'enable_rerank': self.enable_rerank,
+            'rerank_model': self.rerank_model,
+            'rerank_candidate_k': self.rerank_candidate_k,
+            'rerank_max_length': self.rerank_max_length,
             'enable_parent_doc_retrieval': self.enable_parent_doc_retrieval,
             'parent_doc_top_n': self.parent_doc_top_n,
             'parent_doc_max_chars': self.parent_doc_max_chars,

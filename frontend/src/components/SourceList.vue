@@ -28,7 +28,7 @@ function searchLabel(src: SourceDoc): string {
   return methodLabel[m] || m || '未知'
 }
 
-// 是否有可展开的详情（chunk 元信息或通道得分）
+// 是否有可展开的详情（chunk 元信息、通道得分或重排得分）
 function hasDetail(src: SourceDoc): boolean {
   return !!(
     src.chunk_id ||
@@ -39,6 +39,7 @@ function hasDetail(src: SourceDoc): boolean {
     src.bm25_score != null ||
     src.vector_score != null ||
     src.dual_score != null ||
+    src.reranked ||
     src.path_length != null
   )
 }
@@ -99,6 +100,7 @@ const activeNames = computed<string[]>(() => {
             <div class="source-head">
               <span class="source-name">{{ src.recipe_name }}</span>
               <el-tag size="small" type="info">{{ searchLabel(src) }}</el-tag>
+              <el-tag v-if="src.reranked" size="small" type="success" effect="plain">🔁 重排</el-tag>
               <el-tag v-if="chunkLoc(src)" size="small" type="info" effect="plain">{{ chunkLoc(src) }}</el-tag>
               <span class="source-score">得分 {{ fmtScore(src.final_score ?? src.score) }}</span>
             </div>
@@ -136,6 +138,15 @@ const activeNames = computed<string[]>(() => {
                   <span v-if="ch.hit && ch.rank != null" class="ch-rank">排名 #{{ ch.rank }}</span>
                   <span v-if="ch.raw != null" class="ch-raw">原始分 {{ fmtScore(ch.raw, 4) }}</span>
                 </div>
+              </div>
+            </div>
+
+            <!-- 重排得分（cross-encoder 精排分） -->
+            <div v-if="src.reranked && src.rerank_score != null" class="detail-row">
+              <span class="detail-label">重排得分</span>
+              <div class="rerank-cell">
+                <span class="rerank-value">{{ fmtScore(src.rerank_score, 4) }}</span>
+                <span class="rerank-hint">cross-encoder 精排分（已作为最终分）</span>
               </div>
             </div>
 
@@ -231,6 +242,24 @@ const activeNames = computed<string[]>(() => {
 }
 .ch-rank,
 .ch-raw {
+  color: var(--el-text-color-secondary);
+  font-size: 11px;
+}
+.rerank-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: var(--el-color-success-light-9);
+  border: 1px solid var(--el-color-success-light-5);
+  font-size: 12px;
+}
+.rerank-value {
+  font-weight: 600;
+  color: var(--el-color-success);
+}
+.rerank-hint {
   color: var(--el-text-color-secondary);
   font-size: 11px;
 }
