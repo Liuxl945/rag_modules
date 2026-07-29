@@ -319,10 +319,14 @@ class IntelligentQueryRouter:
     def _combined_search(self, query: str, top_k: int) -> List[Document]:
         """组合搜索策略：结合传统检索和图 RAG 的优势。
 
-        采用 Round-robin（轮询）交替融合策略：
-            1. 将 top_k 平分给两种策略（traditional_k + graph_k = top_k）
-            2. 交替添加图 RAG 结果和传统检索结果（图 RAG 优先，通常质量更高）
-            3. 基于内容哈希去重（page_content[:100] 的 MD5）
+        设计原则（v2）：
+            1. 传统混合检索（BM25+向量+双层键值 → RRF+reranker → 父文档回填）是答案的主体
+               证据来源，分配完整 top_k 名额，让 reranker 从 20 候选池里挑出最优 top_k，
+               不再人为 //2 压缩名额导致高质量菜谱被挤掉。
+            2. 图 RAG 返回的是多跳路径 / 知识子图等「辅助推理线索」，不是答案主体，
+               只给一个小预算（combined_graph_budget，默认 2），避免空壳子图/无关路径
+               占用主体证据的名额，污染 LLM 上下文。
+            3. 仍然采用 Round-robin 交替融合、图优先、内容哈希去重；最终截断到 top_k。
 
         Args:
             query: 用户的自然语言查询
@@ -331,38 +335,41 @@ class IntelligentQueryRouter:
         Returns:
             融合后的 Document 列表（metadata 含 search_source 标记来源）
         """
-        # 分配结果数量：传统检索和图 RAG 各占一半
-        traditional_k = max(1, top_k // 2)
-        graph_k = top_k - traditional_k
+        # 图 RAG 辅助预算：从 config 读，默认 2；上限不超过 top_k 避免全被图结果占满。
+        graph_budget = int(getattr(self.config, "combined_graph_budget", 2))
+        graph_k = max(0, min(graph_budget, top_k))
+        # 传统路：给满 top_k 名额，让 reranker 在候选池里自由挑出最优 top_k 个完整菜谱。
+        traditional_k = top_k
 
         # 执行两种检索
         traditional_docs = self.traditional_retrieval.hybrid_search(query, traditional_k)
-        graph_docs = self.graph_rag_retrieval.graph_rag_search(query, graph_k)
+        graph_docs = (
+            self.graph_rag_retrieval.graph_rag_search(query, graph_k) if graph_k > 0 else []
+        )
 
         # 合并和去重（基于内容哈希）
         combined_docs = []
-        seen_contents = set()  # 已添加内容的哈希集合
+        seen_contents = set()
 
-        # 交替添加结果（Round-robin）：图 RAG 优先（通常质量更高）
+        # 交替添加（Round-robin）：图 RAG 优先（推理线索前置，帮助 LLM 建立关系认知）
         max_len = max(len(traditional_docs), len(graph_docs))
         for i in range(max_len):
-            # 先添加图 RAG 结果（通常质量更高，优先保留）
+            # 先加图 RAG 结果
             if i < len(graph_docs):
                 doc = graph_docs[i]
-                # 基于内容前 100 字符的 MD5 去重
                 content_hash = hashlib.md5(doc.page_content[:100].encode('utf-8')).hexdigest()
                 if content_hash not in seen_contents:
                     seen_contents.add(content_hash)
-                    doc.metadata["search_source"] = "graph_rag"  # 标记来源
+                    doc.metadata["search_source"] = "graph_rag"
                     combined_docs.append(doc)
 
-            # 再添加传统检索结果
+            # 再加传统检索结果
             if i < len(traditional_docs):
                 doc = traditional_docs[i]
                 content_hash = hashlib.md5(doc.page_content[:100].encode('utf-8')).hexdigest()
                 if content_hash not in seen_contents:
                     seen_contents.add(content_hash)
-                    doc.metadata["search_source"] = "traditional"  # 标记来源
+                    doc.metadata["search_source"] = "traditional"
                     combined_docs.append(doc)
 
         return combined_docs[:top_k]

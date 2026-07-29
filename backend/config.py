@@ -54,6 +54,12 @@ class GraphRAGConfig:
     temperature: float = 0.1        # 低温度 → 回答更确定、更稳定
     max_tokens: int = 2048          # 单次回答最大输出 token 数
 
+    # combined 策略下的图 RAG 辅助预算
+    # combined 检索中，图 RAG 返回的是「多跳路径/知识子图」等推理线索，不是答案主体证据；
+    # 因此只给少量名额（默认 2），避免空壳子图或无关路径占用 top_k 挤掉高质量菜谱。
+    # 传统路始终分配完整 top_k，让 reranker 从候选池里自由挑最优结果。
+    combined_graph_budget: int = 2
+
     # 图数据处理配置（文档分块与图遍历）
     chunk_size: int = 500           # 文档分块的目标大小（字符数）
     chunk_overlap: int = 50         # 相邻块的 overlap，避免切分打断上下文
@@ -94,6 +100,7 @@ class GraphRAGConfig:
 
             'temperature': self.temperature,
             'max_tokens': self.max_tokens,
+            'combined_graph_budget': self.combined_graph_budget,
             'chunk_size': self.chunk_size,
             'chunk_overlap': self.chunk_overlap,
             'max_graph_depth': self.max_graph_depth
