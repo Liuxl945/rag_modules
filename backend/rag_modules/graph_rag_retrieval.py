@@ -41,12 +41,14 @@ class QueryType(Enum):
         SUBGRAPH: 完整子图（"川菜有什么特色？" -> 需要相关完整知识网络）
         PATH_FINDING: 路径查找（"从食材到成品菜的制作路径"）
         CLUSTERING: 聚类相似性（"和宫保鸡丁类似的菜有哪些？"）
+        INTERSECTION: 多实体交集查询（"同时用到鸡蛋和番茄的菜有哪些？" -> 找共同关联的 Recipe）
     """
     ENTITY_RELATION = "entity_relation"  # 直接实体关系（一跳）
     MULTI_HOP = "multi_hop"             # 多跳推理（2-3 跳）
     SUBGRAPH = "subgraph"               # 完整子图（局部知识网络）
     PATH_FINDING = "path_finding"       # 路径查找（最短路径）
     CLUSTERING = "clustering"           # 聚类相似性
+    INTERSECTION = "intersection"       # 多实体交集（找同时关联多个实体的节点）
 
 
 @dataclass
@@ -278,10 +280,12 @@ class GraphRAGRetrieval:
            - subgraph: 需要完整子图（如：川菜有什么特色？需要川菜相关的完整知识网络）
            - path_finding: 路径查找（如：从食材到成品菜的制作路径）
            - clustering: 聚类相似性（如：和宫保鸡丁类似的菜有哪些？）
+           - intersection: **多实体交集查询**（如：有哪些菜同时用到了鸡蛋和番茄？需要找同时关联多个实体的共同节点）
 
         2. source_entities：
            - 只包含在图中**很有可能有对应节点**的具体实体名称
-           - 优先选择：菜系（如"川菜"）、具体菜名（如"宫保鸡丁"）、食材名（如"鸡肉"、"豆腐"）
+           - 优先选择：菜系（如"川菜"）、具体菜名（如"宫保鸡丁"）、食材名（如"鸡肉"、"豆腐"、"鸡蛋"、"番茄"）
+           - 交集查询（intersection）中，这里列出所有需要同时满足的实体（如["鸡蛋", "番茄"]）
            - 不要把抽象概念或约束（如"糖尿病饮食限制"、"具体川菜菜品"、"健康饮食"、"30分钟内"）放进 source_entities
 
         3. target_entities：
@@ -337,6 +341,20 @@ class GraphRAGRetrieval:
             "health": ["糖尿病", "低糖"],
             "time": {{"max_minutes": 30}}
           }}
+        }}
+
+        示例3（交集查询）：
+        查询："有哪些菜同时用到了鸡蛋和番茄？"
+        期望分析：这是典型的 intersection 查询，需要找同时关联"鸡蛋"和"番茄"两个食材节点的 Recipe。
+
+        返回JSON示例：
+        {{
+          "query_type": "intersection",
+          "source_entities": ["鸡蛋", "番茄"],
+          "target_entities": [],
+          "relation_types": ["REQUIRES"],
+          "max_depth": 2,
+          "constraints": {{}}
         }}
 
         请严格返回一个合法的 JSON 对象，不要包含任何多余的说明文字。
@@ -472,6 +490,207 @@ class GraphRAGRetrieval:
 
         logger.info(f"多跳遍历完成，找到 {len(paths)} 条路径")
         return paths
+
+    def _expand_synonyms(self, entities: List[str]) -> Dict[str, List[str]]:
+        """食材同义词扩展：将用户查询词扩展为可能的图中节点名称。
+
+        例如：番茄 -> [番茄, 西红柿, 圣女果]，鸡蛋 -> [鸡蛋, 鸡蛋黄, 鸡蛋清]
+
+        Args:
+            entities: 用户查询中的实体列表
+
+        Returns:
+            Dict[原词, 扩展同义词列表]
+        """
+        # 常见食材同义词表（可以后续扩展为配置文件或从图中学习）
+        SYNONYMS = {
+            "番茄": ["番茄", "西红柿", "圣女果", "小番茄"],
+            "西红柿": ["西红柿", "番茄", "圣女果"],
+            "土豆": ["土豆", "马铃薯", "洋芋"],
+            "马铃薯": ["马铃薯", "土豆", "洋芋"],
+            "鸡蛋": ["鸡蛋", "鸡蛋黄", "鸡蛋清", "蛋黄", "蛋白"],
+            "蛋黄": ["蛋黄", "鸡蛋黄", "鸡蛋"],
+            "蛋白": ["蛋白", "鸡蛋清", "鸡蛋"],
+            "青椒": ["青椒", "菜椒", "甜椒", "灯笼椒"],
+            "菜椒": ["菜椒", "青椒", "甜椒"],
+            "花椒": ["花椒", "川椒", "蜀椒"],
+            "生抽": ["生抽", "酱油"],
+            "老抽": ["老抽", "酱油"],
+            "醋": ["醋", "米醋", "陈醋", "白醋"],
+            "白糖": ["白糖", "白砂糖", "蔗糖"],
+            "冰糖": ["冰糖", "白糖"],
+        }
+
+        expanded = {}
+        for entity in entities:
+            # 查找同义词表，没有则用原词
+            synonyms = None
+            for key, values in SYNONYMS.items():
+                if key == entity or entity in values:
+                    synonyms = values
+                    break
+            expanded[entity] = synonyms or [entity]
+
+        return expanded
+
+    def intersection_search(self, graph_query: GraphQuery) -> List[Document]:
+        """多实体交集查询：查找同时关联多个源实体的共同节点。
+
+        典型场景："有哪些菜同时用到了鸡蛋和番茄？"
+        Cypher 逻辑：
+            1. 对每个查询实体做同义词扩展（番茄 -> 番茄/西红柿）
+            2. 匹配 (r:Recipe)-[:REQUIRES]->(i:Ingredient) WHERE i.name 匹配任意同义词
+            3. 按 r 分组，统计匹配到几个**不同的查询实体组**（非重复食材名）
+            4. 要求组数 >= 实体数量（所有查询实体都至少匹配一个同义词）
+            5. 排序时优先精确匹配、排除酱料/加工品（如"番茄酱"不算"番茄"）
+
+        Args:
+            graph_query: 图查询计划（source_entities 包含所有需要同时满足的实体）
+
+        Returns:
+            Document 列表，每个 Document 代表一个满足交集条件的 Recipe
+        """
+        logger.info(f"执行交集查询: {graph_query.source_entities}")
+
+        documents = []
+        if not self.driver:
+            logger.error("Neo4j连接未建立")
+            return documents
+
+        entities = graph_query.source_entities
+        if len(entities) < 2:
+            logger.warning("交集查询需要至少2个源实体，降级为子图查询")
+            return documents
+
+        # 同义词扩展
+        expanded = self._expand_synonyms(entities)
+        logger.info(f"同义词扩展: {expanded}")
+
+        try:
+            with self.driver.session() as session:
+                # Cypher：找同时匹配所有实体（含同义词）的 Recipe
+                # 策略：对每个实体组（含同义词），只要匹配到组内任意一个词就算满足该实体
+                cypher = """
+                // UNWIND 每个实体组：entity_idx 标识是第几个查询实体，synonyms 是它的同义词
+                UNWIND $entity_groups as group
+                UNWIND group.synonyms as syn
+                MATCH (r:Recipe)-[:REQUIRES]->(i:Ingredient)
+
+                // 食材名匹配同义词（优先精确等于，其次包含）
+                // 排除加工品：名称以"酱/汁/粉/油/膏/露"结尾的都是加工品，不算原食材
+                WHERE (
+                    i.name = syn
+                    OR (
+                        i.name CONTAINS syn
+                        AND NOT ANY(suffix IN ['酱', '汁', '粉', '油', '膏', '露'] WHERE i.name ENDS WITH suffix)
+                    )
+                )
+                // 为每个 Recipe 统计它匹配到了哪些查询实体组（去重）
+                WITH r, collect(DISTINCT group.entity_idx) as matched_entity_groups,
+                     collect(DISTINCT i.name) as matched_ingredients
+
+                // 必须匹配所有查询实体组
+                WHERE size(matched_entity_groups) >= $required_count
+
+                // 获取该 Recipe 用到的所有食材
+                MATCH (r)-[:REQUIRES]->(all_i:Ingredient)
+                WITH r, matched_ingredients, collect(DISTINCT all_i.name) as all_ingredients
+
+                RETURN r.name as recipe_name,
+                       r.description as description,
+                       matched_ingredients,
+                       all_ingredients,
+                       size(matched_ingredients) as match_count
+                ORDER BY match_count DESC
+                LIMIT 30
+                """
+
+                # 构造实体组参数：[{entity_idx: 0, synonyms: [...]}, ...]
+                entity_groups = []
+                for idx, entity in enumerate(entities):
+                    entity_groups.append({
+                        "entity_idx": idx,
+                        "synonyms": expanded[entity]
+                    })
+
+                result = session.run(cypher, {
+                    "entity_groups": entity_groups,
+                    "required_count": len(entities)
+                })
+
+                for record in result:
+                    recipe_name = record["recipe_name"] or "未知菜品"
+                    matched = record["matched_ingredients"] or []
+                    all_ing = record["all_ingredients"] or []
+                    desc = record["description"] or ""
+
+                    # 二次打分：精确匹配原词加分，匹配加工品减分
+                    score = 0.0
+                    exact_matches = 0
+                    for entity in entities:
+                        synonyms = expanded[entity]
+                        # 检查该实体组是否有精确匹配（等于原词或核心同义词）
+                        found_exact = False
+                        found_partial = False
+                        for ing in matched:
+                            if ing == entity:
+                                found_exact = True
+                                break
+                            for syn in synonyms[:2]:  # 前两个是核心同义词
+                                if ing == syn:
+                                    found_exact = True
+                                    break
+                            # 部分匹配但可能是加工品（如番茄酱）
+                            if entity in ing and (ing.endswith("酱") or ing.endswith("汁") or ing.endswith("粉")):
+                                found_partial = True
+                        if found_exact:
+                            exact_matches += 1
+                            score += 1.0
+                        elif found_partial:
+                            score += 0.3  # 加工品匹配权重低
+
+                    # 必须精确匹配所有实体，否则过滤掉（避免"鸡蛋+番茄酱"混进来）
+                    if exact_matches < len(entities):
+                        logger.debug(f"过滤半成品匹配: {recipe_name}, matched={matched}, exact={exact_matches}")
+                        continue
+
+                    # 最终得分：精确匹配数 + 菜名相关度
+                    relevance = score / len(entities)
+                    if any(e in recipe_name for e in entities):
+                        relevance += 0.2  # 菜名里包含查询词，加分（如"西红柿炒鸡蛋"）
+
+                    # 构建内容：菜名 + 用到的食材 + 描述
+                    content_parts = [
+                        f"菜品：{recipe_name}",
+                        f"同时用到的食材：{'、'.join(matched)}",
+                        f"全部食材：{'、'.join(all_ing[:20])}",
+                    ]
+                    if desc:
+                        content_parts.append(f"描述：{desc[:500]}")
+
+                    content = "\n".join(content_parts)
+
+                    doc = Document(
+                        page_content=content,
+                        metadata={
+                            "search_type": "intersection_result",
+                            "recipe_name": recipe_name,
+                            "matched_entities": matched,
+                            "all_ingredients": all_ing,
+                            "match_count": exact_matches,
+                            "relevance_score": relevance
+                        }
+                    )
+                    documents.append(doc)
+
+                # 按相关性得分降序排序
+                documents.sort(key=lambda d: d.metadata["relevance_score"], reverse=True)
+
+        except Exception as e:
+            logger.error(f"交集查询失败: {e}", exc_info=True)
+
+        logger.info(f"交集查询完成，找到 {len(documents)} 个结果")
+        return documents
 
     def extract_knowledge_subgraph(self, graph_query: GraphQuery) -> KnowledgeSubgraph:
         """提取知识子图：获取核心实体相关的完整知识网络。
@@ -695,6 +914,10 @@ class GraphRAGRetrieval:
                 reasoning_chains = self.graph_structure_reasoning(subgraph, query)
 
                 results.extend(self._subgraph_to_documents(subgraph, reasoning_chains, query))
+
+            elif graph_query.query_type == QueryType.INTERSECTION:
+                # 多实体交集查询（如"同时用到鸡蛋和番茄的菜"）
+                results.extend(self.intersection_search(graph_query))
 
             elif graph_query.query_type == QueryType.ENTITY_RELATION:
                 # 实体关系查询（可以视为一跳 / 少量跳的路径查询）

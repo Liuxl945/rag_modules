@@ -174,8 +174,15 @@ class IntelligentQueryRouter:
 
         基于分析推荐检索策略：
         - hybrid_traditional: 适合简单直接的信息查找
-        - graph_rag: 适合复杂关系推理和知识发现
+        - graph_rag: 适合复杂关系推理和知识发现，**特别适合：**
+          * 多实体交集查询（"同时用到A和B的菜有哪些？"）
+          * 多跳关系推理（"A配什么B？"）
+          * 实体间关系探索
         - combined: 需要两种策略结合
+
+        **判断要点：** 只要查询涉及多个实体之间的关联（同时用到/一起/都/既...又...），
+        即使看起来是"找哪些菜"这种简单问题，也应该推荐 graph_rag，因为图数据库天然
+        支持交集查询。
 
         返回JSON格式：
         {{
@@ -232,16 +239,33 @@ class IntelligentQueryRouter:
             QueryAnalysis 对象（置信度固定为 0.6，标记为"基于规则的简单分析"）
         """
         # 复杂度关键词：出现这些词通常表示需要推理
-        complexity_keywords = ["为什么", "如何", "关系", "影响", "原因", "比较", "区别"]
+        complexity_keywords = ["为什么", "如何", "关系", "影响", "原因", "比较", "区别", "哪些", "哪种", "哪类"]
         # 关系关键词：出现这些词通常表示涉及实体间关系
-        relation_keywords = ["配", "搭配", "组合", "相关", "联系", "连接"]
+        relation_keywords = ["配", "搭配", "组合", "相关", "联系", "连接", "同时用到", "一起用", "都用到", "共同"]
 
-        # 计算复杂度和关系密集度（基于关键词命中比例）
+        # 计算复杂度和关系密集度
+        # 复杂度：线性比例
         complexity = sum(1 for kw in complexity_keywords if kw in query) / len(complexity_keywords)
-        relation_intensity = sum(1 for kw in relation_keywords if kw in query) / len(relation_keywords)
+        # 关系密集度：只要命中任意一个关系关键词，至少给 0.2
+        relation_hits = sum(1 for kw in relation_keywords if kw in query)
+        relation_intensity = max(relation_hits / len(relation_keywords), 0.2 if relation_hits > 0 else 0.0)
+
+        # 特殊模式：多实体交集查询（"同时用到A和B"、"A和B一起做"）
+        import re
+        intersection_patterns = [
+            r"同时.*(用|做|有|包含)",
+            r"一起.*(用|做|搭配)",
+            r"都.*(用|做|有)",
+            r"既.*又.*",
+        ]
+        for pattern in intersection_patterns:
+            if re.search(pattern, query):
+                relation_intensity = max(relation_intensity, 0.6)
+                complexity = max(complexity, 0.5)
+                break
 
         # 策略选择：复杂度或关系密集度超过阈值时使用图 RAG
-        if complexity > 0.3 or relation_intensity > 0.3:
+        if complexity >= 0.15 or relation_intensity >= 0.15:
             strategy = SearchStrategy.GRAPH_RAG
         else:
             strategy = SearchStrategy.HYBRID_TRADITIONAL
