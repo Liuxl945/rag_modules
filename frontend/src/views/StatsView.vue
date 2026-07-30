@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { Upload } from '@element-plus/icons-vue'
 import { getStats, rebuildKnowledgeBase } from '@/api'
 import type { SystemStats } from '@/types'
 import KnowledgeGraphDialog from '@/components/KnowledgeGraphDialog.vue'
@@ -106,7 +107,7 @@ onMounted(refresh)
       <h2>系统统计</h2>
       <div>
         <el-button :loading="loading" @click="refresh">刷新</el-button>
-        <el-button type="primary" @click="uploadVisible = true">上传菜谱</el-button>
+        <el-button type="primary" :icon="Upload" @click="uploadVisible = true">上传菜谱</el-button>
         <el-button type="danger" :loading="rebuilding" @click="rebuild">重建知识库</el-button>
       </div>
     </div>

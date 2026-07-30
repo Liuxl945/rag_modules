@@ -2,10 +2,12 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { Upload } from '@element-plus/icons-vue'
 import { listRecipesFull } from '@/api'
-import type { RecipeListItem } from '@/types'
+import type { RecipeListItem, UploadRecipeResponse } from '@/types'
 import KnowledgeGraphDialog from '@/components/KnowledgeGraphDialog.vue'
 import RecipeDocumentDialog from '@/components/RecipeDocumentDialog.vue'
+import RecipeUploadDialog from '@/components/RecipeUploadDialog.vue'
 
 const router = useRouter()
 
@@ -21,6 +23,7 @@ const filterSource = ref('')
 // 弹窗
 const graphVisible = ref(false)
 const docVisible = ref(false)
+const uploadVisible = ref(false)
 const selectedRid = ref<string | null>(null)
 
 async function fetchRecipes() {
@@ -97,6 +100,11 @@ function resetFilters() {
   filterSource.value = ''
 }
 
+function onUploaded(_res: UploadRecipeResponse) {
+  // 上传成功后刷新菜谱列表
+  fetchRecipes()
+}
+
 onMounted(fetchRecipes)
 </script>
 
@@ -105,6 +113,11 @@ onMounted(fetchRecipes)
     <div class="browse-header">
       <h2>菜谱浏览</h2>
       <span class="count">共 {{ recipes.length }} 道菜谱</span>
+      <div class="header-actions">
+        <el-button type="primary" :icon="Upload" @click="uploadVisible = true">
+          上传菜谱
+        </el-button>
+      </div>
     </div>
 
     <!-- 搜索和筛选栏 -->
@@ -189,6 +202,7 @@ onMounted(fetchRecipes)
     <!-- 知识图谱弹窗（带外部触发选中） -->
     <KnowledgeGraphDialog v-model="graphVisible" :initial-rid="selectedRid" />
     <RecipeDocumentDialog v-model="docVisible" :initial-rid="selectedRid" />
+    <RecipeUploadDialog v-model="uploadVisible" @uploaded="onUploaded" />
   </div>
 </template>
 
@@ -202,7 +216,7 @@ onMounted(fetchRecipes)
 }
 .browse-header {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 12px;
   margin-bottom: 16px;
 }
@@ -212,6 +226,9 @@ onMounted(fetchRecipes)
 .count {
   color: var(--el-text-color-secondary);
   font-size: 14px;
+}
+.header-actions {
+  margin-left: auto;
 }
 .filter-card {
   margin-bottom: 16px;
